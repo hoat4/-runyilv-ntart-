@@ -1,8 +1,7 @@
-package arunyilvantarto;
+package arunyilvantarto.ui;
 
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 
 import java.util.stream.Stream;
 
