@@ -10,20 +10,29 @@ import arunyilvantarto.domain.SellingPeriod;
 import arunyilvantarto.domain.User;
 import arunyilvantarto.operations.AdminOperation;
 import arunyilvantarto.operations.ClosePeriodOp;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.input.KeyCode;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
 import org.tbee.javafx.scene.layout.MigPane;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 
 import static arunyilvantarto.ui.UIUtil.TableBuilder.UNLIMITED_WIDTH;
-import static javafx.beans.binding.Bindings.createBooleanBinding;
+import static javafx.beans.binding.Bindings.*;
 import static javafx.scene.input.KeyCode.*;
 import static javafx.scene.layout.Region.USE_PREF_SIZE;
 
@@ -31,13 +40,17 @@ public class SellingTab implements OperationListener {
 
     private final Main main;
 
-    private TableView<Sale> salesTable;
+    private TableView<Sale> itemsTable;
 
     private int sumPrice;
     private Label sumPriceLabel;
     private final SellingPeriod sellingPeriod;
-    private User staffBill;
-    private ToggleButton staffBillButton;
+
+    private Node mainPane;
+    private Node tickIconPane;
+
+    @SuppressWarnings("ConstantConditions")
+    private final Image tickIcon = new Image(SellingTab.class.getResource("/arunyilvantarto/tickIcon.png").toString());
 
     private SellingTab(Main main, SellingPeriod sellingPeriod) {
         this.main = main;
@@ -51,8 +64,9 @@ public class SellingTab implements OperationListener {
 
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Nyitás");
-        dialog.setHeaderText("A kasszában elvileg XY forint váltópénz maradt.");
         dialog.setContentText("Kasszában lévő váltópénz: ");
+        if (lastSellingPeriod != null)
+            dialog.getEditor().setText(Integer.toString(lastSellingPeriod.closeCash));
         dialog.showAndWait().ifPresent(s -> {
             SellingPeriod sellingPeriod = new SellingPeriod();
             sellingPeriod.id = lastSellingPeriod == null ? 1 : lastSellingPeriod.id + 1;
@@ -88,13 +102,21 @@ public class SellingTab implements OperationListener {
         sumPriceLabel.setPadding(new Insets(10, 0, 0, 0)); // TODO gaptop miért marad ott, ha hidemode 2?
         sumPriceLabel.getStyleClass().add("sumPriceLabel");
 
-        MigPane p = new MigPane("align center center, wrap 1", "[70%:]", "unrelated [] related [grow] 0 [] 15 [] 18").
+        mainPane = new MigPane("align center center, wrap 1", "[70%:]", "unrelated [] related [grow] 0 [] 15 [] 18").
                 add(topToolbar(), "grow").
                 add(salesTable(), "grow").
                 add(sumPriceLabel, "hidemode 2, align right").
                 add(bottomToolbar(), "grow");
-        p.getStyleClass().add("selling-tab");
-        return p;
+
+        ImageView imageView = new ImageView(tickIcon);
+        imageView.setScaleX(.2);
+        imageView.setScaleY(.2);
+        tickIconPane = new MigPane("align center center").add(imageView);
+        tickIconPane.setOpacity(0);
+
+        StackPane sp = new StackPane(mainPane, tickIconPane);
+        sp.getStyleClass().add("selling-tab");
+        return sp;
     }
 
     private Node topToolbar() {
@@ -112,20 +134,22 @@ public class SellingTab implements OperationListener {
         });
 
         TextField barcodeField = new TextField();
-        barcodeField.setOnAction(evt -> {
-            String barcode = barcodeField.getText();
+        UIUtil.barcodeField(barcodeField, text -> {
+            if (text.length() > 20) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Érvénytelen vonalkód");
+                alert.setHeaderText("A megadott vonalkód túl hosszú");
+                alert.setContentText("Valószínűleg olyan vonalkód is be lett olvasva, amihez nem tartozik termék. ");
+                alert.showAndWait();
+                return;
+            }
 
-            main.dataRoot.articles.stream().filter(a -> a.barCode.equals(barcode)).findAny().
-                    ifPresentOrElse(this::addArticle, () -> {
-                        Alert alert = new Alert(Alert.AlertType.WARNING);
-                        alert.setTitle("Nincs ilyen termék");
-                        alert.setContentText("Nincs nyilvántartva olyan termék, melynek vonalkódja " + barcode + " lenne. ");
-                        alert.showAndWait();
-                    });
-
-            barcodeField.setText("");
+            main.dataRoot.articles.stream().filter(a -> a.barCode.equals(text)).findAny().ifPresent(a -> {
+                addArticle(a);
+                Platform.runLater(() -> barcodeField.setText(""));
+            });
         });
-        barcodeField.focusedProperty().addListener((o, old, value)->{
+        barcodeField.focusedProperty().addListener((o, old, value) -> {
             if (!value)
                 barcodeField.requestFocus();
         });
@@ -138,7 +162,7 @@ public class SellingTab implements OperationListener {
     }
 
     private TableView<Sale> salesTable() {
-        return salesTable = new UIUtil.TableBuilder<Sale>(new ArrayList<>()).
+        return itemsTable = new UIUtil.TableBuilder<Sale>(new ArrayList<>()).
                 col("Termék", 0, UNLIMITED_WIDTH, sale -> sale.article.name).
                 col("Ár", 150, 150, sale -> sale.pricePerProduct).
                 col("Mennyiség", 150, 150, sale -> sale.quantity).
@@ -148,11 +172,6 @@ public class SellingTab implements OperationListener {
     }
 
     private Node bottomToolbar() {
-        staffBillButton = new ToggleButton("Személyzeti számlára (F4)");
-        staffBillButton.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
-        staffBillButton.setOnAction(evt -> toStaffBill());
-        UIUtil.assignShortcut(staffBillButton, new KeyCodeCombination(F4));
-
         Button selectArticleManuallyButton = new Button("Termék kiválasztása (F6)");
         selectArticleManuallyButton.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
         selectArticleManuallyButton.setOnAction(evt -> selectArticleManually());
@@ -163,17 +182,28 @@ public class SellingTab implements OperationListener {
         stornoButton.setOnAction(evt -> stornoByBarcode());
         UIUtil.assignShortcut(stornoButton, new KeyCodeCombination(F7));
 
-        Button payByCashButton = new Button("Fizetés készpénzzel (F8)");
+        Button payFromStaffBillButton = new Button("Személyzeti számlára (F8)");
+        payFromStaffBillButton.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+        payFromStaffBillButton.setOnAction(evt -> payToStaffBill());
+        UIUtil.assignShortcut(payFromStaffBillButton, new KeyCodeCombination(F8));
+
+        Button payByCashButton = new Button("Fizetés készpénzzel (F9)");
         payByCashButton.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
         payByCashButton.setOnAction(evt -> payByCash());
-        UIUtil.assignShortcut(payByCashButton, new KeyCodeCombination(F8));
+        UIUtil.assignShortcut(payByCashButton, new KeyCodeCombination(F9));
 
-        Button payByCardButton = new Button("Fizetés kártyával (F9)");
+        Button payByCardButton = new Button("Fizetés kártyával (F10)");
         payByCardButton.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
         payByCardButton.setOnAction(evt -> payByCard());
-        UIUtil.assignShortcut(payByCardButton, new KeyCodeCombination(F9));
+        UIUtil.assignShortcut(payByCardButton, new KeyCodeCombination(F10));
 
-        return new FlowPane(staffBillButton, selectArticleManuallyButton, stornoButton, payByCashButton, payByCardButton) {
+        ObservableValue<Boolean> hasNoItems = isEmpty(itemsTable.getItems());
+        stornoButton.disableProperty().bind(hasNoItems);
+        payFromStaffBillButton.disableProperty().bind(hasNoItems);
+        payByCardButton.disableProperty().bind(hasNoItems);
+        payByCashButton.disableProperty().bind(hasNoItems);
+
+        return new FlowPane(selectArticleManuallyButton, stornoButton, payFromStaffBillButton, payByCashButton, payByCardButton) {
             {
                 setHgap(10);
                 setVgap(10);
@@ -202,38 +232,6 @@ public class SellingTab implements OperationListener {
     @Override
     public void onEvent(AdminOperation op) {
 
-    }
-
-    private void toStaffBill() {
-        staffBillButton.setSelected(true);
-
-        Dialog<User> dialog = new Dialog<>();
-        dialog.setTitle("Személyzeti számlák");
-
-        TableView<User> usersTable = new UIUtil.TableBuilder<>(main.dataRoot.users).
-                col("Felhasználók", 0, UNLIMITED_WIDTH, a -> a.name).
-                build();
-
-        SearchableTable<User> articleSearchableTable = new SearchableTable<>(usersTable, u -> List.of(u.name));
-        articleSearchableTable.textField.setFocusTraversable(true);
-
-        Platform.runLater(articleSearchableTable.textField::requestFocus);
-        dialog.getDialogPane().setContent(articleSearchableTable.build());
-        dialog.getDialogPane().setPrefWidth(900);
-        dialog.getDialogPane().setPrefHeight(800);
-        dialog.setResizable(true);
-
-        ButtonType addButtonType = new ButtonType("Kiválasztás", ButtonBar.ButtonData.OK_DONE);
-
-        dialog.getDialogPane().getButtonTypes().addAll(
-                addButtonType,
-                new ButtonType("Mégsem", ButtonBar.ButtonData.CANCEL_CLOSE)
-        );
-        dialog.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
-        dialog.setResultConverter(b -> b == addButtonType ? usersTable.getSelectionModel().getSelectedItem() : null);
-
-        staffBill = dialog.showAndWait().orElse(null);
-        staffBillButton.setSelected(staffBill != null);
     }
 
     private void selectArticleManually() {
@@ -270,10 +268,8 @@ public class SellingTab implements OperationListener {
         s.article = a;
         s.seller = main.logonUser.name;
         s.timestamp = Instant.now();
-        s.billID = staffBill == null ? new Sale.PeriodBillID(sellingPeriod.id) : new Sale.StaffBillID(staffBill.name);
         sellingPeriod.sales.add(s);
-        salesTable.getItems().add(s);
-        main.salesIO.sale(s);
+        itemsTable.getItems().add(s);
 
         sumPrice += s.quantity * s.article.sellingPrice;
 
@@ -286,17 +282,95 @@ public class SellingTab implements OperationListener {
         dialog.setTitle("Fizetés");
         dialog.setHeaderText("Fizetés készpénzzel");
         dialog.setContentText("Kapott készpénz: ");
+        dialog.getEditor().setText(Integer.toString(sumPrice));
         dialog.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
-        dialog.showAndWait();
+        dialog.showAndWait().ifPresent(s -> {
+            int receivedCash = Integer.parseInt(s);
+            if (receivedCash < sumPrice) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Hibás összeg");
+                alert.setHeaderText("Alulfizetés " + (sumPrice - receivedCash) + " forinttal");
+                alert.setContentText("A kapott összeg (" + receivedCash + " Ft) " + " kevesebb, mint a vásárolt termékek árának összege. ");
+                alert.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
+                alert.showAndWait();
+                payByCash();
+                return;
+            }
+
+            if (receivedCash > sumPrice) {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Visszajáró");
+                alert.setHeaderText("Visszajáró: " + (receivedCash - sumPrice) + " Ft");
+                alert.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
+                alert.showAndWait();
+            }
+
+            for (Sale sale : itemsTable.getItems())
+                sale.billID = new Sale.PeriodBillID(sellingPeriod.id);
+
+            payDone();
+        });
+
     }
 
     private void payByCard() {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Fizetés");
-        dialog.setHeaderText("Kártyás fizetés");
-        dialog.setContentText("Készpénzben kapott részösszeg: ");
+        for (Sale sale : itemsTable.getItems())
+            sale.billID = new Sale.PeriodCardBillID(sellingPeriod.id);
+
+        payDone();
+    }
+
+    private void payToStaffBill() {
+        Dialog<User> dialog = new Dialog<>();
+        dialog.setTitle("Személyzeti számlák");
+
+        TableView<User> usersTable = new UIUtil.TableBuilder<>(main.dataRoot.users).
+                col("Felhasználók", 0, UNLIMITED_WIDTH, a -> a.name).
+                build();
+
+        SearchableTable<User> articleSearchableTable = new SearchableTable<>(usersTable, u -> List.of(u.name));
+        articleSearchableTable.textField.setFocusTraversable(true);
+
+        Platform.runLater(articleSearchableTable.textField::requestFocus);
+        dialog.getDialogPane().setContent(articleSearchableTable.build());
+        dialog.getDialogPane().setPrefWidth(900);
+        dialog.getDialogPane().setPrefHeight(800);
+        dialog.setResizable(true);
+
+        ButtonType addButtonType = new ButtonType("Kiválasztás", ButtonBar.ButtonData.OK_DONE);
+
+        dialog.getDialogPane().getButtonTypes().addAll(
+                addButtonType,
+                new ButtonType("Mégsem", ButtonBar.ButtonData.CANCEL_CLOSE)
+        );
         dialog.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
-        dialog.showAndWait();
+        dialog.setResultConverter(b -> b == addButtonType ? usersTable.getSelectionModel().getSelectedItem() : null);
+
+        dialog.showAndWait().ifPresent(staffBill -> {
+            itemsTable.getItems().forEach(sale -> sale.billID = new Sale.StaffBillID(staffBill.name));
+            payDone();
+        });
+
+    }
+
+    private void payDone() {
+        mainPane.setOpacity(0);
+        tickIconPane.setOpacity(.8);
+
+        Timeline delay = new Timeline(new KeyFrame(Duration.seconds(.7), event -> {
+            mainPane.setOpacity(1);
+            tickIconPane.setOpacity(0);
+        }));
+        delay.play();
+
+        main.executor.execute(() -> {
+            itemsTable.getItems().forEach(main.salesIO::sale);
+            Platform.runLater(() -> {
+                itemsTable.getItems().clear();
+                sumPrice = 0;
+                sumPriceLabel.setVisible(false);
+            });
+        });
     }
 
     private void stornoByBarcode() {
@@ -304,7 +378,34 @@ public class SellingTab implements OperationListener {
         dialog.setTitle("Sztornó");
         dialog.setHeaderText("Olvasd be a törlendő termék vonalkódját");
         dialog.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
-        dialog.showAndWait();
+        UIUtil.barcodeField(dialog.getEditor(), barcode -> {
+            main.dataRoot.articles.stream().filter(a -> a.barCode.equals(barcode)).findAny().ifPresent(article -> {
+                dialog.close();
+
+                if (itemsTable.getItems().removeIf(s -> s.article.barCode.equals(barcode)))
+                    return;
+
+                Platform.runLater(() -> { // időnként JavaFX bug miatt a dialógus teljesen fehér volt e nélkül
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("Sztornó sikertelen");
+                    alert.setHeaderText("Ez a termék nem volt a megvásárolva");
+                    alert.setContentText("Termék neve: " + article.name);
+                    alert.showAndWait().ifPresent(b -> stornoByBarcode());
+                });
+            });
+        });
+        dialog.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(createBooleanBinding(() ->
+                !UIUtil.isBarcode(dialog.getEditor().getText()), dialog.getEditor().textProperty()));
+        dialog.showAndWait().ifPresent(s -> {
+            Platform.runLater(() -> { // időnként JavaFX bug miatt a dialógus teljesen fehér volt e nélkül
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Sztornó sikertelen");
+                alert.setHeaderText("Ismeretlen vonalkód");
+                alert.setContentText("Nem ismert olyan termék, melynek ez lenne a vonalkódja. ");
+                alert.showAndWait();
+                stornoByBarcode();
+            });
+        });
     }
 
     public boolean close() {

@@ -1,4 +1,4 @@
-.root { -fx-font-size: 22px}
+.root { -fx-font-size: 20px}
 
 .table-row-cell:selected {
    -fx-background-color: rgb(0, 150, 201);

@@ -133,6 +133,7 @@ public class ArticlesTab {
         TextField priceField = new TextField();
         TextField barcodeField = new TextField();
 
+        UIUtil.barcodeField(barcodeField, null);
         Platform.runLater(nameField::requestFocus);
 
         d.setContent(new MigPane().
@@ -146,7 +147,7 @@ public class ArticlesTab {
 
         d.lookupButton(addButtonType).disableProperty().bind(createBooleanBinding(() ->
                         nameField.getText().isEmpty() || !priceField.getText().matches("[0-9]+") ||
-                                !barcodeField.getText().matches("([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9])?"),
+                                !UIUtil.isBarcode(barcodeField.getText()) && !barcodeField.getText().isEmpty(),
                 nameField.textProperty(), priceField.textProperty(), barcodeField.textProperty()));
 
         dialog.setResultConverter(b -> {

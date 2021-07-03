@@ -18,6 +18,9 @@ public class Sale {
 
     public static abstract class BillID {
         public static BillID parse(String s) {
+            if (s.endsWith("-CARD"))
+                return new PeriodBillID(Integer.parseInt(s.substring(0, s.length() - "-CARD".length())));
+
             for (int i = 0; i < s.length(); i++)
                 if (s.charAt(i) < '0' || s.charAt(i) > '9')
                     return new StaffBillID(s);
@@ -37,6 +40,19 @@ public class Sale {
         @Override
         public String toString() {
             return Integer.toString(periodID);
+        }
+    }
+
+    public static class PeriodCardBillID extends BillID {
+        public final int periodID;
+
+        public PeriodCardBillID(int periodID) {
+            this.periodID = periodID;
+        }
+
+        @Override
+        public String toString() {
+            return periodID + "-CARD";
         }
     }
 

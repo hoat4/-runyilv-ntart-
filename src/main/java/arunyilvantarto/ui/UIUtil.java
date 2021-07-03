@@ -36,6 +36,18 @@ public class UIUtil {
         }
     }
 
+    public static boolean isBarcode(String s) {
+        return s.matches("[0-9]+");
+    }
+
+    public static void barcodeField(TextField textField, Consumer<String> handler) {
+        textField.textProperty().addListener((o, old, value) -> {
+            textField.setText(value.replace('ö', '0'));
+            if (handler != null)
+                handler.accept(value);
+        });
+    }
+
     public static void assignShortcut(ButtonBase button, KeyCombination keyCombination) {
         Runnable r = button::fire;
         if (button.getScene() != null)

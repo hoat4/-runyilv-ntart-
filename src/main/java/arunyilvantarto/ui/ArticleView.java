@@ -150,9 +150,11 @@ public class ArticleView {
             TextInputDialog d = new TextInputDialog(article.barCode);
             d.setTitle("Vonalkód beállítása");
             d.setContentText("Vonalkód: ");
+            d.getEditor().setText("");
             d.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(createBooleanBinding(
-                    () -> !d.getEditor().getText().matches("([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9])?"), d.getEditor().textProperty()
+                    () -> !UIUtil.isBarcode(d.getEditor().getText()), d.getEditor().textProperty()
             ));
+            UIUtil.barcodeField(d.getEditor(), null);
             d.showAndWait().ifPresent(s -> {
                 articlesTab.main.executeOperation(new ChangeArticleOp(article.name,
                         ChangeArticleOp.ArticleProperty.BARCODE, article.sellingPrice, s));

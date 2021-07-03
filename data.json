@@ -8,17 +8,24 @@
     "name" : "a",
     "role" : "STAFF",
     "passwordHash" : null,
-    "staffBill" : 0
+    "staffBill" : 75
   }, {
     "name" : "b",
     "role" : "STAFF",
     "passwordHash" : null,
-    "staffBill" : 0
+    "staffBill" : 32
   }, {
     "name" : "c",
     "role" : "ROOT",
     "passwordHash" : "9b5ECwOqVL8CITg44NW+CuhJRFYYVzAUmtVfH8vRj88=",
     "staffBill" : 0
   } ],
-  "articles" : [ ]
+  "articles" : [ {
+    "timestamp" : 1625351321.659870100,
+    "name" : "a",
+    "barCode" : "1234",
+    "sellingPrice" : 32,
+    "items" : [ ],
+    "stockQuantity" : -34
+  } ]
 }
