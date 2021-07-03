@@ -61,10 +61,12 @@ public class UsersTab {
 
         TableColumn<User, String> nameColumn = new TableColumn<>("Név");
         nameColumn.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().name));
+        nameColumn.setMinWidth(230);
         usersTable.getColumns().add(nameColumn);
 
         TableColumn<User, String> typeColumn = new TableColumn<>("Típus");
         typeColumn.setCellValueFactory(c -> new ReadOnlyStringWrapper(roleToString(c.getValue().role)));
+        typeColumn.setMinWidth(180);
         usersTable.getColumns().add(typeColumn);
 
         usersTable.getItems().addAll(data.users);

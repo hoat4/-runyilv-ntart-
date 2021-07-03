@@ -119,7 +119,7 @@ public class ArticleView {
             ButtonType cancelButtonType = new ButtonType("Mégsem", ButtonBar.ButtonData.CANCEL_CLOSE);
             alert.getDialogPane().getButtonTypes().setAll(deleteButtonType, cancelButtonType);
 
-            if (alert.showAndWait().get() == deleteButtonType) {
+            if (alert.showAndWait().orElse(null) == deleteButtonType) {
                 articlesTab.main.executeOperation(new DeleteItemOp(article.name, item));
             }
         });

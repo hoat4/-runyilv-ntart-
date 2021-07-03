@@ -76,10 +76,11 @@ public class ArticlesTab {
         // TODO kéne szólni JavaFX-eseknek, hogy csináljanak végre normális column resize policy-t, egyrészt JDK-8089280,
         //      másrészt nem is lehet értelmes módon most column weight-ot megadni (asszem azt még Swingben is lehet)
 
-        nameColumn.setMinWidth(250);
-        barcodeColumn.setMinWidth(130);
-        priceColumn.setMinWidth(100);
-        quantityColumn.setMinWidth(100);
+        // min-width legyen kicsit nagyobb mint ami tényleg kell Windowson, mert Raspberry Pi-n font valamiért nagyobb lesz
+        nameColumn.setMinWidth(280);
+        barcodeColumn.setMinWidth(160);
+        priceColumn.setMinWidth(110);
+        quantityColumn.setMinWidth(130);
         table.getColumns().addAll(nameColumn, barcodeColumn, priceColumn, quantityColumn);
 
         table.getSelectionModel().selectedItemProperty().addListener((o, oldValue, newValue) -> showArticle(newValue));
@@ -99,7 +100,7 @@ public class ArticlesTab {
             alert.getDialogPane().getButtonTypes().setAll(deleteButtonType, cancelButtonType);
             alert.getDialogPane().lookupButton(cancelButtonType).requestFocus();
 
-            if (alert.showAndWait().get() == deleteButtonType) {
+            if (alert.showAndWait().orElse(null) == deleteButtonType) {
                 main.executeOperation(new DeleteArticleOp(article));
             }
         });

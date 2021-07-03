@@ -5,6 +5,7 @@ import arunyilvantarto.Security;
 import arunyilvantarto.domain.User;
 import arunyilvantarto.domain.User.Role;
 import arunyilvantarto.operations.ChangePasswordOp;
+import arunyilvantarto.operations.ChangeRoleOp;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import org.tbee.javafx.scene.layout.MigPane;
@@ -44,6 +45,11 @@ public class UserView {
             }
         }
         roleComboBox.getSelectionModel().select(user.role);
+        roleComboBox.getSelectionModel().selectedItemProperty().addListener((o, old, value)->{
+            if (value != user.role) {
+                app.executeOperation(new ChangeRoleOp(user.name, user.role, value));
+            }
+        });
 
         Button changePasswordButton = new Button();
         changePasswordButton.setText("Jelszó módosítása");

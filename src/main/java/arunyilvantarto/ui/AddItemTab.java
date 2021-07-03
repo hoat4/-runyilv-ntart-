@@ -111,13 +111,13 @@ public class AddItemTab {
 
         TableColumn<Item, String> articleColumn = new TableColumn<>("Árucikk");
         articleColumn.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().article.name));
-        articleColumn.setMinWidth(220);
+        articleColumn.setMinWidth(280);
         productsTable.getColumns().add(articleColumn);
 
         TableColumn<Item, Integer> quantityColumn = new TableColumn<>("Mennyiség");
         quantityColumn.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().purchaseQuantity));
-        quantityColumn.setMinWidth(100);
-        quantityColumn.setMaxWidth(150);
+        quantityColumn.setMinWidth(150);
+        quantityColumn.setMaxWidth(200);
         productsTable.getColumns().add(quantityColumn);
 
         TableColumn<Item, Integer> priceColumn = new TableColumn<>("Ár");

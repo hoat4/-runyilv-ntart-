@@ -160,9 +160,16 @@ public class Main extends Application {
         if (rootListener != null)
             rootListener.onEvent(op);
 
+        if (Platform.isFxApplicationThread())
+            executor.execute(this::writeDataToFile);
+        else
+            writeDataToFile();
+    }
+
+    private void writeDataToFile() {
         try {
             Files.write(Path.of("data.json"), JSON_WRITER.writeValueAsBytes(dataRoot));
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
 
             Platform.runLater(() -> {

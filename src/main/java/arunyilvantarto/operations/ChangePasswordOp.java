@@ -4,9 +4,9 @@ import arunyilvantarto.domain.DataRoot;
 
 public class ChangePasswordOp implements AdminOperation {
 
-    private final String username;
-    private final byte[] oldPassword;
-    private final byte[] newPassword;
+    public final String username;
+    public final byte[] oldPassword;
+    public final byte[] newPassword;
 
     public ChangePasswordOp(String username, byte[] oldPassword, byte[] newPassword) {
         this.username = username;

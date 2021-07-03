@@ -4,8 +4,8 @@ import arunyilvantarto.Main;
 import arunyilvantarto.OperationListener;
 import arunyilvantarto.operations.AdminOperation;
 import javafx.scene.Node;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 
 public class AdminPage implements OperationListener {
 
@@ -22,6 +22,22 @@ public class AdminPage implements OperationListener {
 
     public Node build() {
         TabPane tabPane = new TabPane();
+        tabPane.setOnKeyPressed(evt->{
+            if (evt.getCode() == KeyCode.ESCAPE) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Kijelentkezés");
+                alert.setHeaderText("Kijelentkezés");
+                alert.setContentText("Biztos kijelentkezel?");
+                ButtonType yesButton = new ButtonType("Igen", ButtonBar.ButtonData.YES);
+                ButtonType noButton = new ButtonType("No", ButtonBar.ButtonData.NO);
+                alert.getDialogPane().getButtonTypes().setAll(yesButton, noButton);
+                if (alert.showAndWait().orElse(null) == yesButton) {
+                    app.logonUser = null;
+                    LoginForm loginForm = new LoginForm(app);
+                    app.switchPage(loginForm.buildLayout(), null);
+                }
+            }
+        });
 
         Tab articlesTab = new Tab("Árucikkek", (this.articlesTab = new ArticlesTab(app)).build());
         articlesTab.setClosable(false);

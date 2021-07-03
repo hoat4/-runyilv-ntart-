@@ -18,7 +18,7 @@ public class AddItemOp implements AdminOperation {
 
     @Override
     public void undo(DataRoot data) {
-         Article a = data.article(articleID);
+        Article a = data.article(articleID);
         if (!a.items.removeIf(p -> p.id.equals(product.id)))
             throw new RuntimeException("no product found with ID " + product.id + " in article " + articleID);
         a.stockQuantity -= product.purchaseQuantity;
