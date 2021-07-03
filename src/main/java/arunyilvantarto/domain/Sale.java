@@ -1,0 +1,55 @@
+package arunyilvantarto.domain;
+
+import java.time.Instant;
+
+public class Sale {
+
+    public Instant timestamp;
+
+    public Article article;
+
+    public int pricePerProduct;
+
+    public int quantity;
+
+    public String seller;
+
+    public BillID billID;
+
+    public static abstract class BillID {
+        public static BillID parse(String s) {
+            for (int i = 0; i < s.length(); i++)
+                if (s.charAt(i) < '0' || s.charAt(i) > '9')
+                    return new StaffBillID(s);
+            return new PeriodBillID(Integer.parseInt(s));
+        }
+
+        public abstract String toString();
+    }
+
+    public static class PeriodBillID extends BillID {
+        public final int periodID;
+
+        public PeriodBillID(int periodID) {
+            this.periodID = periodID;
+        }
+
+        @Override
+        public String toString() {
+            return Integer.toString(periodID);
+        }
+    }
+
+    public static class StaffBillID extends BillID {
+        public final String username;
+
+        public StaffBillID(String username) {
+            this.username = username;
+        }
+
+        @Override
+        public String toString() {
+            return username;
+        }
+    }
+}

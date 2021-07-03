@@ -5,19 +5,31 @@ plugins {
 
 group 'net.hontvari'
 
-javafx {
-    version = "15.0.1"
-    modules = [ 'javafx.controls' ]
+compileJava {
+    sourceCompatibility = "11"
+    targetCompatibility = "11"
 }
 
-mainClassName = "arunyilvantarto.Main"
+mainClassName = "arunyilvantarto.Main2"
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
-applicationDefaultJvmArgs = ["--add-opens=javafx.graphics/javafx.scene=ALL-UNNAMED"]
+applicationDefaultJvmArgs = [
+        "--add-opens=javafx.graphics/javafx.scene=ALL-UNNAMED", // ControlsFX-nek
+        "--add-opens=javafx.graphics/com.sun.javafx.scene=ALL-UNNAMED" // preload-hoz
+]
 
+distributions {
+    main {
+        distributionBaseName = 'Arunyilvantarto'
+    }
+}
+
+jar {
+    archiveName 'abc.jar'
+}
 
 repositories {
     mavenCentral()
@@ -26,5 +38,10 @@ repositories {
 dependencies {
     compile "com.miglayout:miglayout-javafx:11.0"
     compile "org.controlsfx:controlsfx:11.1.0"
+    compile "com.fasterxml.jackson.core:jackson-databind:2.12.3"
+    compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.12.3"
+    compile "org.openjfx:javafx-base:11.0.2:win"
+    compile "org.openjfx:javafx-graphics:11.0.2:win"
+    compile "org.openjfx:javafx-controls:11.0.2:win"
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }

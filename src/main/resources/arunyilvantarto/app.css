@@ -1,1 +1,7 @@
 .root { -fx-font-size: 16px}
+.selling-tab { -fx-font-size: 22px}
+
+.sumPriceLabel {
+    /*-fx-font-weight: bold;*/
+    -fx-font-size: 1.5em;
+}

@@ -12,6 +12,7 @@ public class AdminPage implements OperationListener {
     private final Main app;
 
     private ArticlesTab articlesTab;
+    private AddItemTab addItemTab;
     private UsersTab usersTab;
     private RevenueTab revenueTab;
 
@@ -22,15 +23,19 @@ public class AdminPage implements OperationListener {
     public Node build() {
         TabPane tabPane = new TabPane();
 
-        Tab articlesTab = new Tab("Termékek", (this.articlesTab = new ArticlesTab(app)).build());
+        Tab articlesTab = new Tab("Árucikkek", (this.articlesTab = new ArticlesTab(app)).build());
         articlesTab.setClosable(false);
         tabPane.getTabs().add(articlesTab);
 
-        Tab usersTab = new Tab("Felhasználók",(this.usersTab = new UsersTab()).build());
+        Tab addProductTab = new Tab("Termékfelvitel", (this.addItemTab = new AddItemTab(app)).build());
+        addProductTab.setClosable(false);
+        tabPane.getTabs().add(addProductTab);
+
+        Tab usersTab = new Tab("Felhasználók", (this.usersTab = new UsersTab(app)).build());
         usersTab.setClosable(false);
         tabPane.getTabs().add(usersTab);
 
-        Tab revenueTab = new Tab("Forgalom", (this.revenueTab = new RevenueTab()).build());
+        Tab revenueTab = new Tab("Forgalom", (this.revenueTab = new RevenueTab(app)).build());
         revenueTab.setClosable(false);
         tabPane.getTabs().add(revenueTab);
 
@@ -40,5 +45,7 @@ public class AdminPage implements OperationListener {
     @Override
     public void onEvent(AdminOperation op) {
         articlesTab.onEvent(op);
+        addItemTab.onEvent(op);
+        usersTab.onEvent(op);
     }
 }

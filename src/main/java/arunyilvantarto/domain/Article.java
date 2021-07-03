@@ -1,13 +1,11 @@
 package arunyilvantarto.domain;
 
-import java.math.BigInteger;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 
 public class Article {
-
-    public UUID id;
 
     public Instant timestamp;
 
@@ -17,6 +15,8 @@ public class Article {
 
     public int sellingPrice;
 
-    public List<Product> products;
+    @JsonManagedReference
+    public List<Item> items;
 
+    public int stockQuantity;
 }

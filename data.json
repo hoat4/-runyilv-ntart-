@@ -1,0 +1,50 @@
+{
+  "users" : [ {
+    "name" : "u",
+    "role" : "ROOT",
+    "passwordHash" : "obGYKw8+PnQcilppY7LuB7KGqhB3PYmeue7d6oZYLlg=",
+    "staffBill" : 0
+  }, {
+    "name" : "a",
+    "role" : "STAFF",
+    "passwordHash" : null,
+    "staffBill" : 0
+  }, {
+    "name" : "b",
+    "role" : "STAFF",
+    "passwordHash" : null,
+    "staffBill" : 0
+  } ],
+  "articles" : [ {
+    "timestamp" : 1625320129.807612700,
+    "name" : "árucikknév",
+    "barCode" : "123456789012",
+    "sellingPrice" : 10000,
+    "items" : [ {
+      "id" : "7e61c94e-524f-49c7-b8bf-6b92cab3fdc4",
+      "timestamp" : 1625320130.172113900,
+      "purchasePrice" : 500,
+      "purchaseQuantity" : 1,
+      "expiration" : null
+    }, {
+      "id" : "44849427-4444-43b0-9d11-92909fb196d1",
+      "timestamp" : 1625325316.873771100,
+      "purchasePrice" : 1,
+      "purchaseQuantity" : 120,
+      "expiration" : null
+    }, {
+      "id" : "0cee4d38-c6f3-4598-af3c-afb1cd3c5985",
+      "timestamp" : 1625325583.054175900,
+      "purchasePrice" : 3,
+      "purchaseQuantity" : 3,
+      "expiration" : null
+    }, {
+      "id" : "92c11a99-5a03-4b75-9e9e-96dd73ea7cad",
+      "timestamp" : 1625331849.129859600,
+      "purchasePrice" : 3,
+      "purchaseQuantity" : 3,
+      "expiration" : null
+    } ],
+    "stockQuantity" : 115
+  } ]
+}

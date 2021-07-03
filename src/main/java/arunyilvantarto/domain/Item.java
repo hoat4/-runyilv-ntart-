@@ -1,11 +1,17 @@
 package arunyilvantarto.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
-public class Product {
+public class Item {
 
     public UUID id;
+
+    @JsonBackReference
+    public Article article;
 
     public Instant timestamp;
 
@@ -13,5 +19,5 @@ public class Product {
 
     public int purchaseQuantity;
 
-    public int stockQuantity;
+    public LocalDate expiration;
 }

@@ -1,0 +1,8 @@
+.root { -fx-font-size: 22px}
+
+.table-row-cell:selected {
+   -fx-background-color: rgb(0, 150, 201);
+}
+.table-row-cell:selected .text {
+   -fx-fill: white;
+}

@@ -6,8 +6,13 @@ public class User {
 
     public Role role;
     public byte[] passwordHash;
+    public int staffBill;
 
     public enum Role {
-        ROOT, ADMIN, SELLER, STAFF
+        ROOT, ADMIN, SELLER, STAFF;
+
+        public boolean canSell() {
+            return this != STAFF;
+        }
     }
 }
