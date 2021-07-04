@@ -7,7 +7,7 @@
   }, {
     "name" : "a",
     "role" : "STAFF",
-    "passwordHash" : null,
+    "passwordHash" : "9b5ECwOqVL8CITg44NW+CuhJRFYYVzAUmtVfH8vRj88=",
     "staffBill" : 75
   }, {
     "name" : "b",
@@ -17,6 +17,16 @@
   }, {
     "name" : "c",
     "role" : "ROOT",
+    "passwordHash" : "9b5ECwOqVL8CITg44NW+CuhJRFYYVzAUmtVfH8vRj88=",
+    "staffBill" : 0
+  }, {
+    "name" : "x",
+    "role" : "ADMIN",
+    "passwordHash" : "7zBr5lWa5kxPRAVAUKZ0YX1UU0yIYaCF9x/N5HnIDQ0=",
+    "staffBill" : 0
+  }, {
+    "name" : "y",
+    "role" : "SELLER",
     "passwordHash" : "9b5ECwOqVL8CITg44NW+CuhJRFYYVzAUmtVfH8vRj88=",
     "staffBill" : 0
   } ],

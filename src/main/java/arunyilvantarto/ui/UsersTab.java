@@ -38,6 +38,8 @@ public class UsersTab {
             usersTable.getItems().add(((AddUserOp)op).user);
         if (op instanceof ChangeRoleOp)
             usersTable.refresh();
+        if (userView != null)
+            userView.onEvent(op);
     }
 
     private Button newUserButton() {

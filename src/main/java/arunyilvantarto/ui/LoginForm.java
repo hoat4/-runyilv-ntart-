@@ -161,21 +161,41 @@ public class LoginForm {
 
     private void loadAndShowNextPage() {
         long begin = System.nanoTime();
-        if (app.logonUser.role == ADMIN || app.logonUser.role == ROOT) {
-            AdminPage adminPage = new AdminPage(app);
-            final Node n = adminPage.build();
-            Scene scene = app.preload(n);
-            Platform.runLater(() -> {
-                app.switchPage(scene, adminPage);
-                System.out.println((System.nanoTime() - begin) / 1000000);
-            });
-        } else {
-            SellingTab.begin(app, () -> {
-                progressIndicator.setVisible(false);
-                System.out.println((System.nanoTime() - begin) / 1000000);
-            }, ()->{
-                loginForm.setOpacity(1);
-            });
+        switch (app.logonUser.role) {
+            case ADMIN:
+            case ROOT:
+                AdminPage adminPage = new AdminPage(app);
+                final Node n = adminPage.build();
+                Scene scene = app.preload(n);
+                Platform.runLater(() -> {
+                    app.switchPage(scene, adminPage);
+                    System.out.println((System.nanoTime() - begin) / 1000000);
+                });
+                break;
+            case SELLER:
+                SellingTab.begin(app, () -> {
+                    progressIndicator.setVisible(false);
+                    System.out.println((System.nanoTime() - begin) / 1000000);
+                }, () -> {
+                    app.logonUser = null;
+                    loginForm.setOpacity(1);
+                });
+                break;
+            case STAFF:
+                Platform.runLater(() -> {
+                    progressIndicator.setVisible(false);
+                    app.logonUser = null;
+                    loginForm.setOpacity(1);
+
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("Belépés");
+                    alert.setHeaderText("Hiányzó jogosultság");
+                    alert.setContentText("Nem léphetsz be eladóként, mert csak vonatszemélyzet vagy");
+                    alert.showAndWait();
+                });
+                break;
+            default:
+                throw new UnsupportedOperationException(app.logonUser.name);
         }
     }
 

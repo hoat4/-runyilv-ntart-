@@ -4,8 +4,10 @@ import arunyilvantarto.Main;
 import arunyilvantarto.Security;
 import arunyilvantarto.domain.User;
 import arunyilvantarto.domain.User.Role;
+import arunyilvantarto.operations.AdminOperation;
 import arunyilvantarto.operations.ChangePasswordOp;
 import arunyilvantarto.operations.ChangeRoleOp;
+import javafx.beans.binding.Bindings;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import org.tbee.javafx.scene.layout.MigPane;
@@ -16,6 +18,9 @@ public class UserView {
 
     private final Main app;
     private final User user;
+
+    private ComboBox<Role> roleComboBox;
+    private Button changePasswordButton;
 
     public UserView(Main app, User user) {
         this.app = app;
@@ -31,8 +36,16 @@ public class UserView {
         return tabPane;
     }
 
+    public void onEvent(AdminOperation op) {
+        if (op instanceof ChangePasswordOp && ((ChangePasswordOp)op).username.equals(user.name))
+            changePasswordButton.setText("Jelszó módosítása");
+
+        if (op instanceof ChangeRoleOp && ((ChangeRoleOp)op).username.equals(user.name))
+            roleComboBox.getSelectionModel().select(((ChangeRoleOp)op).newRole);
+    }
+
     private Node settings() {
-        ComboBox<Role> roleComboBox = new ComboBox<>();
+        roleComboBox = new ComboBox<>();
         if (app.logonUser.role == Role.ROOT)
             roleComboBox.getItems().addAll(Role.values());
         else {
@@ -45,14 +58,14 @@ public class UserView {
             }
         }
         roleComboBox.getSelectionModel().select(user.role);
-        roleComboBox.getSelectionModel().selectedItemProperty().addListener((o, old, value)->{
+        roleComboBox.getSelectionModel().selectedItemProperty().addListener((o, old, value) -> {
             if (value != user.role) {
                 app.executeOperation(new ChangeRoleOp(user.name, user.role, value));
             }
         });
 
-        Button changePasswordButton = new Button();
-        changePasswordButton.setText("Jelszó módosítása");
+        changePasswordButton = new Button();
+        changePasswordButton.setText(user.passwordHash == null ? "Jelszó létrehozása" : "Jelszó módosítása");
         changePasswordButton.setOnAction(evt -> {
             TextInputDialog d = new TextInputDialog();
             d.setTitle("Új jelszó");
@@ -76,7 +89,9 @@ public class UserView {
             });
         });
 
-        return new MigPane("align center center").
+        changePasswordButton.visibleProperty().bind(Bindings.notEqual(roleComboBox.valueProperty(), Role.STAFF));
+
+        return new MigPane("align center center, hidemode 3").
                 add(new Label("Név: ")).
                 add(new Label(user.name), "wrap").
                 add(new Label("Típus: ")).
