@@ -112,7 +112,7 @@ public class Main extends Application {
                     evt.consume();
         });
         primaryStage.setScene(scene);
-        primaryStage.setWidth(1500);
+        primaryStage.setWidth(1270);
         primaryStage.setHeight(900);
         primaryStage.show();
         primaryStage.setOnHidden(e -> {

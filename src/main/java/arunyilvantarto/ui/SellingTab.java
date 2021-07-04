@@ -14,10 +14,9 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -27,7 +26,6 @@ import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 import org.tbee.javafx.scene.layout.MigPane;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 
@@ -44,7 +42,7 @@ public class SellingTab implements OperationListener {
 
     private int sumPrice;
     private Label sumPriceLabel;
-    private final SellingPeriod sellingPeriod;
+    private SellingPeriod sellingPeriod;
 
     private Node mainPane;
     private Node tickIconPane;
@@ -52,34 +50,44 @@ public class SellingTab implements OperationListener {
     @SuppressWarnings("ConstantConditions")
     private final Image tickIcon = new Image(SellingTab.class.getResource("/arunyilvantarto/tickIcon.png").toString());
 
-    private SellingTab(Main main, SellingPeriod sellingPeriod) {
+    private SellingTab(Main main) {
         this.main = main;
-        this.sellingPeriod = sellingPeriod;
     }
 
-    public static void begin(Main app) {
-        SellingPeriod lastSellingPeriod = lastSellingPeriod(app.salesIO);
-        if (lastSellingPeriod != null && lastSellingPeriod.endTime == null)
-            throw new IllegalStateException("nem volt lezárva");
+    public static void begin(Main app, Runnable preloadDoneCallback, Runnable cancelCallback) {
+        SellingTab sellingTab = new SellingTab(app);
+        Scene scene = app.preload(sellingTab.build());
 
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Nyitás");
-        dialog.setContentText("Kasszában lévő váltópénz: ");
-        if (lastSellingPeriod != null)
-            dialog.getEditor().setText(Integer.toString(lastSellingPeriod.closeCash));
-        dialog.showAndWait().ifPresent(s -> {
-            SellingPeriod sellingPeriod = new SellingPeriod();
-            sellingPeriod.id = lastSellingPeriod == null ? 1 : lastSellingPeriod.id + 1;
-            sellingPeriod.username = app.logonUser.name;
-            sellingPeriod.beginTime = Instant.now();
-            sellingPeriod.openCash = Integer.parseInt(s);
-            sellingPeriod.sales = new ArrayList<>();
-            app.currentSellingPeriod = sellingPeriod;
+        Platform.runLater(() -> {
+            if (preloadDoneCallback != null)
+            preloadDoneCallback.run();
 
-            app.salesIO.beginPeriod(sellingPeriod);
+            SellingPeriod lastSellingPeriod = lastSellingPeriod(app.salesIO);
+            if (lastSellingPeriod != null && lastSellingPeriod.endTime == null)
+                throw new IllegalStateException("nem volt lezárva");
 
-            SellingTab sellingTab = new SellingTab(app, sellingPeriod);
-            app.switchPage(sellingTab.build(), sellingTab);
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Nyitás");
+            dialog.setContentText("Kasszában lévő váltópénz: ");
+            if (lastSellingPeriod != null)
+                dialog.getEditor().setText(Integer.toString(lastSellingPeriod.closeCash));
+            dialog.showAndWait().ifPresentOrElse(s -> {
+                SellingPeriod sellingPeriod = new SellingPeriod();
+                sellingPeriod.id = lastSellingPeriod == null ? 1 : lastSellingPeriod.id + 1;
+                sellingPeriod.username = app.logonUser.name;
+                sellingPeriod.beginTime = Instant.now();
+                sellingPeriod.openCash = Integer.parseInt(s);
+                sellingPeriod.sales = new ArrayList<>();
+                app.currentSellingPeriod = sellingPeriod;
+
+                app.salesIO.beginPeriod(sellingPeriod);
+
+                sellingTab.sellingPeriod = sellingPeriod;
+                app.switchPage(scene, sellingTab);
+            }, ()->{
+                if (cancelCallback != null)
+                    cancelCallback.run();
+            });
         });
     }
 
@@ -113,6 +121,7 @@ public class SellingTab implements OperationListener {
         imageView.setScaleY(.2);
         tickIconPane = new MigPane("align center center").add(imageView);
         tickIconPane.setOpacity(0);
+        tickIconPane.setMouseTransparent(true);
 
         StackPane sp = new StackPane(mainPane, tickIconPane);
         sp.getStyleClass().add("selling-tab");
@@ -442,6 +451,6 @@ public class SellingTab implements OperationListener {
             }
         }
 
-        main.executeOperation(new ClosePeriodOp(purchasedProducts, staffBillGrowths));
+        main.executeOperation(new ClosePeriodOp(sellingPeriod, purchasedProducts, staffBillGrowths));
     }
 }

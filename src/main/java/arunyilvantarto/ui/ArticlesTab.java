@@ -83,7 +83,10 @@ public class ArticlesTab {
         quantityColumn.setMinWidth(130);
         table.getColumns().addAll(nameColumn, barcodeColumn, priceColumn, quantityColumn);
 
-        table.getSelectionModel().selectedItemProperty().addListener((o, oldValue, newValue) -> showArticle(newValue));
+        table.getSelectionModel().selectedItemProperty().addListener((o, oldValue, newValue) -> {
+            articleViewContainer.getChildren().clear();
+            articleViewContainer.add((visibleArticleView = new ArticleView(this, newValue)).build(), "grow");
+        });
         table.getItems().addAll(main.dataRoot.articles);
 
         MenuItem deleteMenuItem = new MenuItem("Törlés");
@@ -111,9 +114,8 @@ public class ArticlesTab {
         return table;
     }
 
-    private void showArticle(Article article) {
-        articleViewContainer.getChildren().clear();
-        articleViewContainer.add((visibleArticleView = new ArticleView(this, article)).build(), "grow");
+     void showArticle(Article article) {
+        articlesTable.getSelectionModel().select(article);
     }
 
     private void newArticle() {

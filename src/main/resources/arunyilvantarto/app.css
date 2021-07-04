@@ -5,3 +5,4 @@
     /*-fx-font-weight: bold;*/
     -fx-font-size: 1.5em;
 }
+.tool-bar {-fx-padding: .8em;-fx-spacing: .8em;}

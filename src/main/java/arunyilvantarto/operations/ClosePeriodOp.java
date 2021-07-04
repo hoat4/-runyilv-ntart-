@@ -1,6 +1,9 @@
 package arunyilvantarto.operations;
 
 import arunyilvantarto.domain.DataRoot;
+import arunyilvantarto.domain.SellingPeriod;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Map;
 
@@ -9,7 +12,11 @@ public class ClosePeriodOp implements AdminOperation{
     public final Map<String, Integer> purchasedProducts;
     public final Map<String, Integer> staffBillGrowths;
 
-    public ClosePeriodOp(Map<String, Integer> purchasedProducts, Map<String, Integer> staffBillGrowths) {
+    @JsonIgnoreProperties("sales")
+    public final SellingPeriod sellingPeriod;
+
+    public ClosePeriodOp(SellingPeriod sellingPeriod, Map<String, Integer> purchasedProducts, Map<String, Integer> staffBillGrowths) {
+        this.sellingPeriod = sellingPeriod;
         this.purchasedProducts = purchasedProducts;
         this.staffBillGrowths = staffBillGrowths;
     }

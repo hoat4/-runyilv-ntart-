@@ -1,5 +1,8 @@
 package arunyilvantarto.domain;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import java.time.Instant;
 
 public class Sale {
@@ -17,6 +20,7 @@ public class Sale {
     public BillID billID;
 
     public static abstract class BillID {
+        @JsonCreator
         public static BillID parse(String s) {
             if (s.endsWith("-CARD"))
                 return new PeriodBillID(Integer.parseInt(s.substring(0, s.length() - "-CARD".length())));
@@ -27,6 +31,7 @@ public class Sale {
             return new PeriodBillID(Integer.parseInt(s));
         }
 
+        @JsonValue
         public abstract String toString();
     }
 

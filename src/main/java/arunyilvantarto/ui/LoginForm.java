@@ -27,6 +27,8 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 
+import static arunyilvantarto.domain.User.Role.ADMIN;
+import static arunyilvantarto.domain.User.Role.ROOT;
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 public class LoginForm {
@@ -42,7 +44,13 @@ public class LoginForm {
         this.app = app;
         this.data = app.dataRoot;
 
-        app.executor.execute(() -> Security.hashPassword("")); // preload MessageDigest
+        Platform.runLater(() -> {
+            app.executor.execute(() -> {
+                // preload
+                Security.hashPassword("");
+                app.preload(new TableView<>());
+            });
+        });
     }
 
     public Region buildLayout() {
@@ -152,12 +160,23 @@ public class LoginForm {
 
 
     private void loadAndShowNextPage() {
-        AdminPage adminPage = new AdminPage(app);
-        final Node n = adminPage.build();
-        Scene scene = app.preload(n);
-        Platform.runLater(() -> {
-            app.switchPage(scene, adminPage);
-        });
+        long begin = System.nanoTime();
+        if (app.logonUser.role == ADMIN || app.logonUser.role == ROOT) {
+            AdminPage adminPage = new AdminPage(app);
+            final Node n = adminPage.build();
+            Scene scene = app.preload(n);
+            Platform.runLater(() -> {
+                app.switchPage(scene, adminPage);
+                System.out.println((System.nanoTime() - begin) / 1000000);
+            });
+        } else {
+            SellingTab.begin(app, () -> {
+                progressIndicator.setVisible(false);
+                System.out.println((System.nanoTime() - begin) / 1000000);
+            }, ()->{
+                loginForm.setOpacity(1);
+            });
+        }
     }
 
 }

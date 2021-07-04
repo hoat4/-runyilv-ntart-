@@ -11,8 +11,8 @@
     "staffBill" : 75
   }, {
     "name" : "b",
-    "role" : "STAFF",
-    "passwordHash" : null,
+    "role" : "SELLER",
+    "passwordHash" : "rd1ROBOYVj5A+T/7migyD3rBsVCjQpfWy5FTHuSoIHo=",
     "staffBill" : 32
   }, {
     "name" : "c",

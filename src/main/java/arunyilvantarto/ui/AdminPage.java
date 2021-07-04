@@ -2,27 +2,37 @@ package arunyilvantarto.ui;
 
 import arunyilvantarto.Main;
 import arunyilvantarto.OperationListener;
+import arunyilvantarto.domain.Article;
+import arunyilvantarto.domain.User;
 import arunyilvantarto.operations.AdminOperation;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import org.tbee.javafx.scene.layout.MigPane;
 
 public class AdminPage implements OperationListener {
 
-    private final Main app;
+    final Main main;
 
-    private ArticlesTab articlesTab;
-    private AddItemTab addItemTab;
-    private UsersTab usersTab;
-    private RevenueTab revenueTab;
+    private TabPane tabPane;
 
-    public AdminPage(Main app) {
-        this.app = app;
+    private Tab articlesTab, usersTab;
+
+    private ArticlesTab articles;
+    private AddItemTab addItem;
+    private UsersTab users;
+    private RevenueTab revenue;
+
+    public AdminPage(Main main) {
+        this.main = main;
     }
 
     public Node build() {
-        TabPane tabPane = new TabPane();
-        tabPane.setOnKeyPressed(evt->{
+        tabPane = new TabPane();
+        tabPane.setOnKeyPressed(evt -> {
             if (evt.getCode() == KeyCode.ESCAPE) {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("Kijelentkezés");
@@ -32,36 +42,63 @@ public class AdminPage implements OperationListener {
                 ButtonType noButton = new ButtonType("No", ButtonBar.ButtonData.NO);
                 alert.getDialogPane().getButtonTypes().setAll(yesButton, noButton);
                 if (alert.showAndWait().orElse(null) == yesButton) {
-                    app.logonUser = null;
-                    LoginForm loginForm = new LoginForm(app);
-                    app.switchPage(loginForm.buildLayout(), null);
+                    main.logonUser = null;
+                    LoginForm loginForm = new LoginForm(main);
+                    main.switchPage(loginForm.buildLayout(), null);
                 }
             }
         });
 
-        Tab articlesTab = new Tab("Árucikkek", (this.articlesTab = new ArticlesTab(app)).build());
+        articlesTab = new Tab("Árucikkek", (this.articles = new ArticlesTab(main)).build());
         articlesTab.setClosable(false);
         tabPane.getTabs().add(articlesTab);
 
-        Tab addProductTab = new Tab("Termékfelvitel", (this.addItemTab = new AddItemTab(app)).build());
+        Tab addProductTab = new Tab("Termékfelvitel", (this.addItem = new AddItemTab(main)).build());
         addProductTab.setClosable(false);
         tabPane.getTabs().add(addProductTab);
 
-        Tab usersTab = new Tab("Felhasználók", (this.usersTab = new UsersTab(app)).build());
+        usersTab = new Tab("Felhasználók", (this.users = new UsersTab(main)).build());
         usersTab.setClosable(false);
         tabPane.getTabs().add(usersTab);
 
-        Tab revenueTab = new Tab("Forgalom", (this.revenueTab = new RevenueTab(app)).build());
+        Tab revenueTab = new Tab("Forgalom", (this.revenue = new RevenueTab(this)).build());
         revenueTab.setClosable(false);
         tabPane.getTabs().add(revenueTab);
 
-        return tabPane;
+        Button beginSellingButton = new Button("Kassza nyitása");
+        beginSellingButton.setOnAction(evt -> {
+            SellingTab.begin(main, null, null);
+        });
+
+        Button logoutButton = new Button("Kijelentkezés");
+        logoutButton.setOnAction(evt -> {
+            main.logonUser = null;
+            LoginForm loginForm = new LoginForm(main);
+            main.switchPage(loginForm.buildLayout(), null);
+        });
+
+        Pane spacer = new Pane();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        return new MigPane("fill, wrap 1, gap 0, ins 0", null, "[][grow]").
+                add(new ToolBar(beginSellingButton, spacer,  new Label("Bejelentkezve "+main.logonUser.name+"-ként"), logoutButton), "grow").
+                add(tabPane, "grow");
     }
 
     @Override
     public void onEvent(AdminOperation op) {
-        articlesTab.onEvent(op);
-        addItemTab.onEvent(op);
-        usersTab.onEvent(op);
+        articles.onEvent(op);
+        addItem.onEvent(op);
+        users.onEvent(op);
+    }
+
+    public void showArticle(Article article) {
+        tabPane.getSelectionModel().select(articlesTab);
+        articles.showArticle(article);
+    }
+
+    public void showUser(User user) {
+        tabPane.getSelectionModel().select(usersTab);
+        users.showUser(user);
     }
 }

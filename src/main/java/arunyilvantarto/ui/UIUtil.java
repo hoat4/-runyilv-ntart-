@@ -7,7 +7,10 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.paint.Color;
 import javafx.util.StringConverter;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +20,8 @@ import java.util.function.Function;
 import static javafx.scene.paint.Color.color;
 
 public class UIUtil {
+
+    public static final DateTimeFormatter DATETIME_FORMAT =DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm");
 
     public static boolean isLocalDate(String s) {
         try {
@@ -38,6 +43,10 @@ public class UIUtil {
 
     public static boolean isBarcode(String s) {
         return s.matches("[0-9]+");
+    }
+
+    public static String toDateString(Instant instant) {
+        return instant.atZone(ZoneId.systemDefault()).format(UIUtil.DATETIME_FORMAT);
     }
 
     public static void barcodeField(TextField textField, Consumer<String> handler) {
@@ -83,6 +92,20 @@ public class UIUtil {
             return this;
         }
 
+        public TableBuilder<T> customCol(String caption, double minWidth, double maxWidth, Function<T, Object> function) {
+            TableColumn<T, Object> col = new TableColumn<>(caption);
+            col.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue()));
+            col.setCellFactory(c->new TableCell<>(){
+                {
+          //          setGraphic(function.apply(ge));
+                }
+            });
+            col.setMinWidth(minWidth);
+            col.setMaxWidth(maxWidth);
+            columns.add(col);
+            return this;
+        }
+
         public TableBuilder<T> onSelected(Consumer<T> handler) {
             onSelected = handler;
             return this;
@@ -90,6 +113,7 @@ public class UIUtil {
 
         public TableBuilder<T> placeholder(String s) {
             Label lbl = new Label(s);
+            lbl.setWrapText(true);
             lbl.setTextFill(color(.6, .6, .6));
             placeholder = lbl;
             return this;

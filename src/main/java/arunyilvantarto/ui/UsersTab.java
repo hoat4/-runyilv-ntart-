@@ -5,6 +5,7 @@ import arunyilvantarto.domain.DataRoot;
 import arunyilvantarto.domain.User;
 import arunyilvantarto.operations.AddUserOp;
 import arunyilvantarto.operations.AdminOperation;
+import arunyilvantarto.operations.ChangeRoleOp;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -35,6 +36,8 @@ public class UsersTab {
     public void onEvent(AdminOperation op) {
         if (op instanceof AddUserOp)
             usersTable.getItems().add(((AddUserOp)op).user);
+        if (op instanceof ChangeRoleOp)
+            usersTable.refresh();
     }
 
     private Button newUserButton() {
@@ -77,6 +80,10 @@ public class UsersTab {
         });
 
         return usersTable;
+    }
+
+    void showUser(User user) {
+        usersTable.getSelectionModel().select(user);
     }
 
     private String roleToString(User.Role role) {
