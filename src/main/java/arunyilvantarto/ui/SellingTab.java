@@ -153,7 +153,7 @@ public class SellingTab implements OperationListener {
                 return;
             }
 
-            main.dataRoot.articles.stream().filter(a -> a.barCode.equals(text)).findAny().ifPresent(a -> {
+            main.dataRoot.articles.stream().filter(a -> Objects.equals(a.barCode, text)).findAny().ifPresent(a -> {
                 addArticle(a);
                 Platform.runLater(() -> barcodeField.setText(""));
             });

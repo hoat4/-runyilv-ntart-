@@ -152,12 +152,13 @@ public class ArticleView {
             d.setContentText("Vonalkód: ");
             d.getEditor().setText("");
             d.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(createBooleanBinding(
-                    () -> !UIUtil.isBarcode(d.getEditor().getText()), d.getEditor().textProperty()
+                    () -> !UIUtil.isBarcode(d.getEditor().getText()) 
+                          && !d.getEditor().getText().isEmpty(), d.getEditor().textProperty()
             ));
             UIUtil.barcodeField(d.getEditor(), null);
             d.showAndWait().ifPresent(s -> {
                 articlesTab.main.executeOperation(new ChangeArticleOp(article.name,
-                        ChangeArticleOp.ArticleProperty.BARCODE, article.sellingPrice, s));
+                        ChangeArticleOp.ArticleProperty.BARCODE, article.barCode, s.isEmpty() ? null : s));
             });
         });
 
