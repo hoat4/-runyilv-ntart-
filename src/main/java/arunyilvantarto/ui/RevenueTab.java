@@ -47,14 +47,14 @@ public class RevenueTab implements OperationListener {
                 col("Nyitás", 170, 180, p -> UIUtil.toDateString(p.beginTime)).
                 col("Zárás", 170, 180, p -> p.endTime == null ? "" : UIUtil.toDateString(p.endTime)).
                 col("Eladó", 120, 170, p -> p.username).
-                col("Nyitó", 90, 90, p -> p.openCash +" Ft").
-                col("Záró", 90, 90, p -> p.endTime == null ? "" : p.closeCash +" Ft").
+                col("Nyitó", 80, 90, p -> p.openCash +" Ft").
+                col("Záró", 80, 90, p -> p.endTime == null ? "" : p.closeCash +" Ft").
                 col("Forgalom", 120, 150, p -> p.sales.stream().mapToInt(RevenueTab::revenue).sum()+" Ft").
                 build();
 
         salesInPeriodTable = new UIUtil.TableBuilder<Sale>(List.of()).
                 col("Termék", 100, UIUtil.TableBuilder.UNLIMITED_WIDTH, s -> s.article.name).
-                col("Mennyiség", 100, 100, s -> s.quantity).
+                col("Mennyiség", 120, 100, s -> s.quantity).
                 col("Bevétel", 100, 100, s -> s.pricePerProduct * s.quantity).
                 placeholder("Nem volt termék eladva").
                 build();
