@@ -18,7 +18,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class SalesIO {
 
-    private static final int N_COL = 6;
+    private static final int MIN_COLS = 6;
+    private static final int MAX_COLS = 7;
 
     private static final String PERIOD_OPEN_PRODUCT_NAME = "NYITÁS";
     private static final String PERIOD_CLOSE_PRODUCT_NAME = "ZÁRÁS";
@@ -43,7 +44,7 @@ public class SalesIO {
 
         LocalDateTime timestamp = LocalDateTime.ofInstant(period.beginTime, ZoneId.systemDefault());
         writeImpl(timestamp, PERIOD_OPEN_PRODUCT_NAME, 1, -period.openCash, period.username,
-                new Sale.PeriodBillID(period.id));
+                new Sale.PeriodBillID(period.id), period.openCreditCardAmount);
     }
 
     public synchronized void sale(Sale sale) {
@@ -51,7 +52,7 @@ public class SalesIO {
             throw new IllegalArgumentException("empty product name or seller name");
 
         LocalDateTime timestamp = LocalDateTime.ofInstant(sale.timestamp, ZoneId.systemDefault());
-        writeImpl(timestamp, sale.article.name, sale.quantity, sale.pricePerProduct, sale.seller, sale.billID);
+        writeImpl(timestamp, sale.article.name, sale.quantity, sale.pricePerProduct, sale.seller, sale.billID, -1);
     }
 
     public synchronized void endPeriod(SellingPeriod period) {
@@ -60,7 +61,7 @@ public class SalesIO {
 
         LocalDateTime timestamp = LocalDateTime.ofInstant(period.endTime, ZoneId.systemDefault());
         writeImpl(timestamp, PERIOD_CLOSE_PRODUCT_NAME, 1, period.closeCash, period.username,
-                new Sale.PeriodBillID(period.id));
+                new Sale.PeriodBillID(period.id),  period.closeCreditCardAmount);
     }
 
     public synchronized void read(SalesVisitor visitor) {
@@ -70,7 +71,7 @@ public class SalesIO {
             channel.position(0);
 
             Reader reader = Channels.newReader(channel, UTF_8);
-            String[] a = new String[N_COL];
+            String[] a = new String[MAX_COLS];
             char[] b = new char[1000];
             int i = 0, column = 0, row = 0;
 
@@ -86,11 +87,11 @@ public class SalesIO {
                     a[column++] = new String(b, 0, i);
                     i = 0;
                     if (ch == '\n') {
-                        if (column == N_COL) {
+                        if (column >= MIN_COLS && column <= MAX_COLS) {
                             if (!a[0].equals("Időpont")) // header
                                 handleRow(a, visitor);
                         } else
-                            throw new IOException("Newline not after " + N_COL + " columns " +
+                            throw new IOException("Newline not after " + MIN_COLS+"-"+MAX_COLS + " columns " +
                                     "but " + column + " @ " + row);
                         column = 0;
                         row++;
@@ -114,6 +115,7 @@ public class SalesIO {
         int pricePerProduct = Integer.parseInt(row[3]);
         String seller = row[4];
         Sale.BillID billID = Sale.BillID.parse(row[5]);
+        int creditCardAmount = row[6] == null ? 0: Integer.parseInt(row[6]);
 
         switch (productName) {
             case PERIOD_OPEN_PRODUCT_NAME:
@@ -123,6 +125,7 @@ public class SalesIO {
                 p.openCash = -pricePerProduct;
                 p.beginTime = timestamp;
                 p.sales = new ArrayList<>();
+                p.openCreditCardAmount = creditCardAmount;
                 currentReadPeriod = p;
                 visitor.beginPeriod(p);
                 break;
@@ -133,6 +136,7 @@ public class SalesIO {
 
                 p = currentReadPeriod;
                 p.closeCash = pricePerProduct;
+                p.closeCreditCardAmount = creditCardAmount;
                 p.endTime = timestamp;
                 visitor.endPeriod(p);
                 currentReadPeriod = null;
@@ -153,9 +157,9 @@ public class SalesIO {
     }
 
     private void writeImpl(LocalDateTime timestamp, String productName, int quantity, int pricePerProduct,
-                           String seller, Sale.BillID periodID) {
+                           String seller, Sale.BillID periodID, int creditCardAmount) {
         writeImpl(timestamp + "\t" + productName + "\t" + quantity + "\t" + pricePerProduct + "\t" + seller + "\t" +
-                periodID + "\n");
+                periodID + (creditCardAmount == -1 ? "" : "\t" + creditCardAmount) + "\n");
     }
 
     private void writeImpl(String l) {

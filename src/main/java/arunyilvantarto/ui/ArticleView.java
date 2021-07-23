@@ -159,7 +159,7 @@ public class ArticleView {
                     () -> !UIUtil.isBarcode(d.getEditor().getText()) 
                           && !d.getEditor().getText().isEmpty(), d.getEditor().textProperty()
             ));
-            UIUtil.barcodeField(d.getEditor(), null);
+            UIUtil.barcodeField(d.getEditor(), null, null);
             d.showAndWait().ifPresent(s -> {
                 articlesTab.main.executeOperation(new ChangeArticleOp(article.name,
                         ChangeArticleOp.ArticleProperty.BARCODE, article.barCode, s.isEmpty() ? null : s));

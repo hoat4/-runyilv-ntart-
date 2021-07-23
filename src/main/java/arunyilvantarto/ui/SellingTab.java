@@ -60,7 +60,7 @@ public class SellingTab implements OperationListener {
 
         Platform.runLater(() -> {
             if (preloadDoneCallback != null)
-            preloadDoneCallback.run();
+                preloadDoneCallback.run();
 
             SellingPeriod lastSellingPeriod = lastSellingPeriod(app.salesIO);
             if (lastSellingPeriod != null && lastSellingPeriod.endTime == null)
@@ -78,13 +78,14 @@ public class SellingTab implements OperationListener {
                 sellingPeriod.beginTime = Instant.now();
                 sellingPeriod.openCash = Integer.parseInt(s);
                 sellingPeriod.sales = new ArrayList<>();
+                sellingPeriod.openCreditCardAmount = lastSellingPeriod == null ? 0 : lastSellingPeriod.closeCreditCardAmount;
                 app.currentSellingPeriod = sellingPeriod;
 
                 app.salesIO.beginPeriod(sellingPeriod);
 
                 sellingTab.sellingPeriod = sellingPeriod;
                 app.switchPage(scene, sellingTab);
-            }, ()->{
+            }, () -> {
                 if (cancelCallback != null)
                     cancelCallback.run();
             });
@@ -157,6 +158,26 @@ public class SellingTab implements OperationListener {
                 addArticle(a);
                 Platform.runLater(() -> barcodeField.setText(""));
             });
+        }, () -> {
+            if (!barcodeField.getText().isEmpty()) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Fizetés");
+                alert.setHeaderText("Vonalkód mező nem üres");
+                alert.setContentText("Vonalkód mező nem üres, addig nem lehet fizetni");
+                alert.showAndWait();
+                return;
+            }
+
+            if (itemsTable.getItems().isEmpty()) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Fizetés");
+                alert.setHeaderText("Nincsenek termékek kiválasztva");
+                alert.setContentText("Nincsenek termékek kiválasztva");
+                alert.showAndWait();
+                return;
+            }
+
+            pay();
         });
         barcodeField.focusedProperty().addListener((o, old, value) -> {
             if (!value)
@@ -196,23 +217,17 @@ public class SellingTab implements OperationListener {
         payFromStaffBillButton.setOnAction(evt -> payToStaffBill());
         UIUtil.assignShortcut(payFromStaffBillButton, new KeyCodeCombination(F8));
 
-        Button payByCashButton = new Button("Fizetés készpénzzel (F9)");
-        payByCashButton.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
-        payByCashButton.setOnAction(evt -> payByCash());
-        UIUtil.assignShortcut(payByCashButton, new KeyCodeCombination(F9));
-
-        Button payByCardButton = new Button("Fizetés kártyával (F10)");
-        payByCardButton.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
-        payByCardButton.setOnAction(evt -> payByCard());
-        UIUtil.assignShortcut(payByCardButton, new KeyCodeCombination(F10));
+        Button payButton = new Button("Fizetés (szóköz)");
+        payButton.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+        payButton.setOnAction(evt -> pay());
+        UIUtil.assignShortcut(payButton, new KeyCodeCombination(SPACE));
 
         ObservableValue<Boolean> hasNoItems = isEmpty(itemsTable.getItems());
         stornoButton.disableProperty().bind(hasNoItems);
         payFromStaffBillButton.disableProperty().bind(hasNoItems);
-        payByCardButton.disableProperty().bind(hasNoItems);
-        payByCashButton.disableProperty().bind(hasNoItems);
+        payButton.disableProperty().bind(hasNoItems);
 
-        return new FlowPane(selectArticleManuallyButton, stornoButton, payFromStaffBillButton, payByCashButton, payByCardButton) {
+        return new FlowPane(selectArticleManuallyButton, stornoButton, payFromStaffBillButton, payButton) {
             {
                 setHgap(10);
                 setVgap(10);
@@ -288,7 +303,7 @@ public class SellingTab implements OperationListener {
         sumPriceLabel.setVisible(sumPrice != 0);
     }
 
-    private void payByCash() {
+    private void pay() {
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Fizetés");
         dialog.setHeaderText("Fizetés készpénzzel");
@@ -304,7 +319,7 @@ public class SellingTab implements OperationListener {
                 alert.setContentText("A kapott összeg (" + receivedCash + " Ft) " + " kevesebb, mint a vásárolt termékek árának összege. ");
                 alert.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
                 alert.showAndWait();
-                payByCash();
+                pay();
                 return;
             }
 
@@ -322,13 +337,6 @@ public class SellingTab implements OperationListener {
             payDone();
         });
 
-    }
-
-    private void payByCard() {
-        for (Sale sale : itemsTable.getItems())
-            sale.billID = new Sale.PeriodCardBillID(sellingPeriod.id);
-
-        payDone();
     }
 
     private void payToStaffBill() {
@@ -409,7 +417,7 @@ public class SellingTab implements OperationListener {
                     alert.showAndWait().ifPresent(b -> stornoByBarcode());
                 }));
             });
-        });
+        }, null);
         dialog.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(createBooleanBinding(() ->
                 !UIUtil.isBarcode(dialog.getEditor().getText()), dialog.getEditor().textProperty()));
         dialog.showAndWait().ifPresent(s -> {
@@ -425,15 +433,30 @@ public class SellingTab implements OperationListener {
     }
 
     public boolean close() {
-        TextInputDialog d = new TextInputDialog();
-        d.setTitle("Zárás");
-        d.setHeaderText(sellingPeriod.remainingCash() + " Ft maradt elvileg a kasszában. ");
-        d.setContentText("Kasszában hagyott váltópénz: ");
-        d.getDialogPane().getButtonTypes().remove(ButtonType.CANCEL);
-        d.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(
-                createBooleanBinding(() -> !d.getEditor().getText().matches("[0-9]+"), d.getEditor().textProperty()));
+        TextInputDialog d1 = new TextInputDialog();
+        d1.setTitle("Zárás");
+        d1.setContentText("Bankkártyás forgalom: ");
+        d1.getDialogPane().getButtonTypes().remove(ButtonType.CANCEL);
+        d1.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(
+                createBooleanBinding(() -> !d1.getEditor().getText().matches("[0-9]+"), d1.getEditor().textProperty()));
 
-        final Optional<String> o = d.showAndWait();
+        Optional<String> o = d1.showAndWait();
+        if (o.isEmpty())
+            return false;
+
+        int creditCardRevenue = Integer.parseInt(o.get());
+        sellingPeriod.closeCreditCardAmount = sellingPeriod.openCreditCardAmount + creditCardRevenue;
+
+
+        TextInputDialog d2 = new TextInputDialog();
+        d2.setTitle("Zárás");
+        d2.setHeaderText(sellingPeriod.remainingCash()-creditCardRevenue + " Ft maradt elvileg a kasszában. ");
+        d2.setContentText("Kasszában hagyott váltópénz: ");
+        d2.getDialogPane().getButtonTypes().remove(ButtonType.CANCEL);
+        d2.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(
+                createBooleanBinding(() -> !d2.getEditor().getText().matches("[0-9]+"), d2.getEditor().textProperty()));
+
+        o = d2.showAndWait();
         o.ifPresent(s -> {
             sellingPeriod.closeCash = Integer.parseInt(s);
             closePeriod(main, sellingPeriod);

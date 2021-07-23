@@ -49,9 +49,15 @@ public class UIUtil {
         return instant.atZone(ZoneId.systemDefault()).format(UIUtil.DATETIME_FORMAT);
     }
 
-    public static void barcodeField(TextField textField, Consumer<String> handler) {
+    public static void barcodeField(TextField textField, Consumer<String> handler, Runnable spaceHandler) {
         textField.textProperty().addListener((o, old, value) -> {
-            textField.setText(value.replace('ö', '0'));
+            boolean pay = value.contains(" ") && spaceHandler != null; // accelerator-ként szóköz nem ment, textfield kapta el mindneképpen
+            value = value.replace('ö', '0').replace(" ", "");
+            textField.setText(value);
+            if (pay) {
+                spaceHandler.run();
+                return;
+            }
             if (handler != null)
                 handler.accept(value);
         });

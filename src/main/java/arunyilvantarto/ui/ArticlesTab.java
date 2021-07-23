@@ -135,7 +135,7 @@ public class ArticlesTab {
         TextField priceField = new TextField();
         TextField barcodeField = new TextField();
 
-        UIUtil.barcodeField(barcodeField, null);
+        UIUtil.barcodeField(barcodeField, null, null);
         Platform.runLater(nameField::requestFocus);
 
         d.setContent(new MigPane().

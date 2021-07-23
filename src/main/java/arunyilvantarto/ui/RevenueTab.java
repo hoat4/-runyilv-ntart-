@@ -47,8 +47,10 @@ public class RevenueTab implements OperationListener {
                 col("Nyitás", 170, 180, p -> UIUtil.toDateString(p.beginTime)).
                 col("Zárás", 170, 180, p -> p.endTime == null ? "" : UIUtil.toDateString(p.endTime)).
                 col("Eladó", 120, 170, p -> p.username).
-                col("Nyitó", 80, 90, p -> p.openCash +" Ft").
-                col("Záró", 80, 90, p -> p.endTime == null ? "" : p.closeCash +" Ft").
+                col("Nyitó kp.", 90, 90, p -> p.openCash +" Ft").
+                col("Záró kp.", 90, 90, p -> p.endTime == null ? "" : p.closeCash +" Ft").
+                col("Nyitó bk.", 90, 90, p -> p.openCreditCardAmount +" Ft").
+                col("Záró bk.", 90, 90, p -> p.endTime == null ? "" : p.closeCreditCardAmount +" Ft").
                 col("Forgalom", 120, 150, p -> p.sales.stream().mapToInt(RevenueTab::revenue).sum()+" Ft").
                 build();
 
