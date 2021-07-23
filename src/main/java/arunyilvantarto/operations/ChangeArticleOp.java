@@ -40,7 +40,8 @@ public class ChangeArticleOp implements AdminOperation {
     public enum ArticleProperty {
 
         BARCODE((a, v) -> a.barCode = (String) v),
-        PRICE((a, v) -> a.sellingPrice = (int) v);
+        PRICE((a, v) -> a.sellingPrice = (int) v),
+        QUANTITY((a, v) -> a.stockQuantity = (int) v);
 
         final BiConsumer<Article, Object> setter;
 

@@ -31,7 +31,7 @@ public class ArticleView {
     private TableView<Item> itemTable;
     private Button priceButton;
     private Button barcodeButton;
-    private Label quantityLabel;
+    private Button quantityButton;
 
     public ArticleView(ArticlesTab articlesTab, Article article) {
         this.articlesTab = articlesTab;
@@ -57,13 +57,13 @@ public class ArticleView {
             AddItemOp a = (AddItemOp) op;
             if (a.articleID.equals(article.name)) {
                 itemTable.getItems().add(a.product);
-                quantityLabel.setText(Integer.toString(article.stockQuantity));
+                quantityButton.setText(Integer.toString(article.stockQuantity));
             }
         } else if (op instanceof DeleteItemOp) {
             DeleteItemOp a = (DeleteItemOp) op;
             if (a.articleName.equals(article.name)) {
                 itemTable.getItems().remove(a.item);
-                quantityLabel.setText(Integer.toString(article.stockQuantity));
+                quantityButton.setText(Integer.toString(article.stockQuantity));
             }
         } else if (op instanceof ChangeArticleOp) {
             ChangeArticleOp c = (ChangeArticleOp) op;
@@ -77,11 +77,14 @@ public class ArticleView {
                 case PRICE:
                     priceButton.setText(c.newValue.toString());
                     break;
+                case QUANTITY:
+                    quantityButton.setText(c.newValue.toString());
+                    break;
                 default:
                     throw new UnsupportedOperationException(c.property.toString());
             }
         } else if (op instanceof ClosePeriodOp) {
-            quantityLabel.setText(Integer.toString(article.stockQuantity));
+            quantityButton.setText(Integer.toString(article.stockQuantity));
         }
     }
 
@@ -133,6 +136,7 @@ public class ArticleView {
     private Node articlePropertiesForm() {
         priceButton = new Button(Integer.toString(article.sellingPrice));
         barcodeButton = new Button(article.barCode == null ? "Beállítás" : article.barCode);
+        quantityButton = new Button(Integer.toString(article.stockQuantity));
 
         priceButton.setOnAction(evt -> {
             TextInputDialog d = new TextInputDialog(Integer.toString(article.sellingPrice));
@@ -161,12 +165,24 @@ public class ArticleView {
                         ChangeArticleOp.ArticleProperty.BARCODE, article.barCode, s.isEmpty() ? null : s));
             });
         });
+        quantityButton.setOnAction(evt -> {
+            TextInputDialog d = new TextInputDialog(Integer.toString(article.stockQuantity));
+            d.setTitle("Termék mennyisége");
+            d.setContentText("Darabszám: ");
+            d.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(createBooleanBinding(
+                    () -> !d.getEditor().getText().matches("[0-9]+"), d.getEditor().textProperty()
+            ));
+            d.showAndWait().ifPresent(s -> {
+                articlesTab.main.executeOperation(new ChangeArticleOp(article.name,
+                        ChangeArticleOp.ArticleProperty.QUANTITY, article.stockQuantity, Integer.parseInt(s)));
+            });
+        });
 
         return new MigPane().
                 add(new Label("Név: ")).
                 add(new Label(article.name), "grow, wrap").
                 add(new Label("Mennyiség: ")).
-                add(quantityLabel = new Label(Integer.toString(article.stockQuantity)), "grow, wrap").
+                add(quantityButton, "grow, wrap").
                 add(new Label("Eladási ár: ")).
                 add(priceButton, "grow, wrap").
                 add(new Label("Vonalkód: ")).

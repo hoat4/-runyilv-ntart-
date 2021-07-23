@@ -277,13 +277,15 @@ public class SellingTab implements OperationListener {
         s.article = a;
         s.seller = main.logonUser.name;
         s.timestamp = Instant.now();
-        sellingPeriod.sales.add(s);
         itemsTable.getItems().add(s);
 
         sumPrice += s.quantity * s.article.sellingPrice;
+        updateSumPrice();
+    }
 
+    private void updateSumPrice() {
         sumPriceLabel.setText("Összesen: " + sumPrice + " Ft");
-        sumPriceLabel.setVisible(true);
+        sumPriceLabel.setVisible(sumPrice != 0);
     }
 
     private void payByCash() {
@@ -372,6 +374,8 @@ public class SellingTab implements OperationListener {
         }));
         delay.play();
 
+        sellingPeriod.sales.addAll(itemsTable.getItems());
+
         main.executor.execute(() -> {
             itemsTable.getItems().forEach(main.salesIO::sale);
             Platform.runLater(() -> {
@@ -388,19 +392,22 @@ public class SellingTab implements OperationListener {
         dialog.setHeaderText("Olvasd be a törlendő termék vonalkódját");
         dialog.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
         UIUtil.barcodeField(dialog.getEditor(), barcode -> {
-            main.dataRoot.articles.stream().filter(a -> a.barCode.equals(barcode)).findAny().ifPresent(article -> {
+            main.dataRoot.articles.stream().filter(a -> Objects.equals(a.barCode, barcode)).findAny().ifPresent(article -> {
                 dialog.close();
 
-                if (itemsTable.getItems().removeIf(s -> s.article.barCode.equals(barcode)))
-                    return;
-
-                Platform.runLater(() -> { // időnként JavaFX bug miatt a dialógus teljesen fehér volt e nélkül
+                List<Sale> sales = new ArrayList<>(itemsTable.getItems());
+                Collections.reverse(sales);
+                sales.stream().filter(s -> Objects.equals(s.article.barCode, barcode)).findFirst().ifPresentOrElse(s -> {
+                    itemsTable.getItems().remove(s);
+                    sumPrice -= s.quantity * article.sellingPrice;
+                    updateSumPrice();
+                }, () -> Platform.runLater(() -> { // időnként JavaFX bug miatt a dialógus teljesen fehér volt e nélkül
                     Alert alert = new Alert(Alert.AlertType.WARNING);
                     alert.setTitle("Sztornó sikertelen");
                     alert.setHeaderText("Ez a termék nem volt a megvásárolva");
                     alert.setContentText("Termék neve: " + article.name);
                     alert.showAndWait().ifPresent(b -> stornoByBarcode());
-                });
+                }));
             });
         });
         dialog.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(createBooleanBinding(() ->
