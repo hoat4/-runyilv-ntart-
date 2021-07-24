@@ -23,6 +23,7 @@ public class SalesIO {
 
     private static final String PERIOD_OPEN_PRODUCT_NAME = "NYITÁS";
     private static final String PERIOD_CLOSE_PRODUCT_NAME = "ZÁRÁS";
+    private static final String MODIFY_CASH_PRODUCT_NAME = "KASSZAMÓDOSÍTÁS";
 
     private final DataRoot data;
     private final FileChannel channel;
@@ -62,6 +63,11 @@ public class SalesIO {
         LocalDateTime timestamp = LocalDateTime.ofInstant(period.endTime, ZoneId.systemDefault());
         writeImpl(timestamp, PERIOD_CLOSE_PRODUCT_NAME, 1, period.closeCash, period.username,
                 new Sale.PeriodBillID(period.id),  period.closeCreditCardAmount);
+    }
+
+    public synchronized void modifyCash(String username, int cash, int creditCardAmount) {
+        LocalDateTime timestamp = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
+        writeImpl(timestamp, MODIFY_CASH_PRODUCT_NAME, 0, cash, username, null, creditCardAmount);
     }
 
     public synchronized void read(SalesVisitor visitor) {
@@ -141,6 +147,9 @@ public class SalesIO {
                 visitor.endPeriod(p);
                 currentReadPeriod = null;
                 break;
+            case MODIFY_CASH_PRODUCT_NAME:
+                visitor.modifyCash(pricePerProduct, creditCardAmount);
+                break;
             default:
                 Sale sale = new Sale();
                 sale.timestamp = timestamp;
@@ -159,7 +168,8 @@ public class SalesIO {
     private void writeImpl(LocalDateTime timestamp, String productName, int quantity, int pricePerProduct,
                            String seller, Sale.BillID periodID, int creditCardAmount) {
         writeImpl(timestamp + "\t" + productName + "\t" + quantity + "\t" + pricePerProduct + "\t" + seller + "\t" +
-                periodID + (creditCardAmount == -1 ? "" : "\t" + creditCardAmount) + "\n");
+                (periodID == null ? "-" : periodID.toString()) +
+                (creditCardAmount == -1 ? "" : "\t" + creditCardAmount) + "\n");
     }
 
     private void writeImpl(String l) {
@@ -169,4 +179,5 @@ public class SalesIO {
             throw new RuntimeException(e); // TODO
         }
     }
+
 }

@@ -23,4 +23,8 @@ public class SellingPeriod {
     public int revenue() {
         return sales.stream().mapToInt(s -> s.pricePerProduct * s.quantity).reduce(openCash, Integer::sum);
     }
+
+    public boolean isClosed() {
+        return endTime != null;
+    }
 }

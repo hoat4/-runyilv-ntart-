@@ -130,7 +130,7 @@ public class LoginForm {
 
 
         app.executor.execute(() -> {
-            SellingPeriod p = SellingTab.lastSellingPeriod(app.salesIO);
+            SellingPeriod p = SellingTab.lastSellingPeriod(app.salesIO).sellingPeriod;
             if (p != null && p.endTime == null) {
                 Platform.runLater(() -> {
                     progressIndicator.setVisible(false);

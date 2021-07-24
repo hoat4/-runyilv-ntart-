@@ -62,7 +62,8 @@ public class SellingTab implements OperationListener {
             if (preloadDoneCallback != null)
                 preloadDoneCallback.run();
 
-            SellingPeriod lastSellingPeriod = lastSellingPeriod(app.salesIO);
+            SellingPeriodAndCash lastSellingPeriodAndCash = lastSellingPeriod(app.salesIO);
+            SellingPeriod lastSellingPeriod = lastSellingPeriodAndCash.sellingPeriod;
             if (lastSellingPeriod != null && lastSellingPeriod.endTime == null)
                 throw new IllegalStateException("nem volt lezárva");
 
@@ -70,7 +71,7 @@ public class SellingTab implements OperationListener {
             dialog.setTitle("Nyitás");
             dialog.setContentText("Kasszában lévő váltópénz: ");
             if (lastSellingPeriod != null)
-                dialog.getEditor().setText(Integer.toString(lastSellingPeriod.closeCash));
+                dialog.getEditor().setText(Integer.toString(lastSellingPeriodAndCash.cash));
             dialog.showAndWait().ifPresentOrElse(s -> {
                 SellingPeriod sellingPeriod = new SellingPeriod();
                 sellingPeriod.id = lastSellingPeriod == null ? 1 : lastSellingPeriod.id + 1;
@@ -78,7 +79,7 @@ public class SellingTab implements OperationListener {
                 sellingPeriod.beginTime = Instant.now();
                 sellingPeriod.openCash = Integer.parseInt(s);
                 sellingPeriod.sales = new ArrayList<>();
-                sellingPeriod.openCreditCardAmount = lastSellingPeriod == null ? 0 : lastSellingPeriod.closeCreditCardAmount;
+                sellingPeriod.openCreditCardAmount = lastSellingPeriodAndCash.creditCardAmount;
                 app.currentSellingPeriod = sellingPeriod;
 
                 app.salesIO.beginPeriod(sellingPeriod);
@@ -92,17 +93,40 @@ public class SellingTab implements OperationListener {
         });
     }
 
-    public static SellingPeriod lastSellingPeriod(SalesIO salesIO) {
-        SellingPeriod[] a = new SellingPeriod[1];
+    public static SellingPeriodAndCash lastSellingPeriod(SalesIO salesIO) {
+        SellingPeriod[] p = new SellingPeriod[1];
+        int[] c = new int[2];
         salesIO.read(new SalesVisitor() {
 
             @Override
             public void beginPeriod(SellingPeriod period) {
-                a[0] = period;
+                p[0] = period;
             }
 
+            @Override
+            public void endPeriod(SellingPeriod period) {
+                c[0] = period.closeCash;
+                c[1] = period.closeCreditCardAmount;
+            }
+
+            @Override
+            public void modifyCash(int cash, int creditCardAmount) {
+                c[0] = cash;
+                c[1] = creditCardAmount;
+            }
         });
-        return a[0];
+        return new SellingPeriodAndCash(p[0], c[0], c[1]);
+    }
+
+    public static class SellingPeriodAndCash {
+        public final SellingPeriod sellingPeriod;
+        public final int cash, creditCardAmount;
+
+        public SellingPeriodAndCash(SellingPeriod sellingPeriod, int cash, int creditCardAmount) {
+            this.sellingPeriod = sellingPeriod;
+            this.cash = cash;
+            this.creditCardAmount = creditCardAmount;
+        }
     }
 
     public Node build() {
@@ -450,7 +474,7 @@ public class SellingTab implements OperationListener {
 
         TextInputDialog d2 = new TextInputDialog();
         d2.setTitle("Zárás");
-        d2.setHeaderText(sellingPeriod.remainingCash()-creditCardRevenue + " Ft maradt elvileg a kasszában. ");
+        d2.setHeaderText(sellingPeriod.remainingCash() - creditCardRevenue + " Ft maradt elvileg a kasszában. ");
         d2.setContentText("Kasszában hagyott váltópénz: ");
         d2.getDialogPane().getButtonTypes().remove(ButtonType.CANCEL);
         d2.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(

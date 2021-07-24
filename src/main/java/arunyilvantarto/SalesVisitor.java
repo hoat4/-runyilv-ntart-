@@ -13,5 +13,8 @@ public interface SalesVisitor {
 
     default void endPeriod(SellingPeriod period){}
 
+    default void modifyCash(int cash, int creditCardAmount) {}
+
     default void end() {}
+
 }
