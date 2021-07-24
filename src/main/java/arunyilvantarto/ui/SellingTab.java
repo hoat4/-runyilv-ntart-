@@ -186,7 +186,7 @@ public class SellingTab implements OperationListener {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Érvénytelen vonalkód");
                 alert.setHeaderText("A megadott vonalkód túl hosszú");
-                alert.setContentText("Valószínűleg olyan vonalkód is be lett olvasva, amihez nem tartozik termék. ");
+                alert.setContentText("Valószínűleg érvénytelen vonalkód is be lett olvasva. ");
                 alert.showAndWait();
                 return;
             }
@@ -211,14 +211,14 @@ public class SellingTab implements OperationListener {
                 barcode = text;
             }
 
-            if (barcode.length() > 5 && main.dataRoot.articles.stream().noneMatch(a->a.barCode != null && a.barCode.startsWith(barcode))) {
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("Érvénytelen vonalkód");
-                alert.setHeaderText("Nincs a megadott vonalkódhoz tartozó termék");
-                alert.showAndWait();
-                Platform.runLater(() -> barcodeField.setText(""));
-                return;
-            }
+            // if (barcode.length() > 5 && main.dataRoot.articles.stream().noneMatch(a->a.barCode != null && a.barCode.startsWith(barcode))) {
+            //     Alert alert = new Alert(Alert.AlertType.WARNING);
+            //     alert.setTitle("Érvénytelen vonalkód");
+            //     alert.setHeaderText("Nincs a megadott vonalkódhoz tartozó termék");
+            //     alert.showAndWait();
+            //     Platform.runLater(() -> barcodeField.setText(""));
+            //     return;
+            // }
 
             main.dataRoot.articles.stream().filter(a -> Objects.equals(a.barCode, barcode)).findAny().ifPresent(a -> {
                 addArticle(a, quantity);
