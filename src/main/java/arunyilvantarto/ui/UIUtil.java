@@ -51,7 +51,7 @@ public class UIUtil {
 
     public static void barcodeField(TextField textField, Consumer<String> handler, Runnable spaceHandler) {
         textField.textProperty().addListener((o, old, value) -> {
-            boolean pay = value.contains(" ") && spaceHandler != null; // accelerator-ként szóköz nem ment, textfield kapta el mindneképpen
+            boolean pay = value.contains(" ") && spaceHandler != null; // accelerator-ként szóköz nem ment, textfield kapta el mindenképpen
             value = value.replace('ö', '0').replace(" ", "");
             textField.setText(value);
             if (pay) {

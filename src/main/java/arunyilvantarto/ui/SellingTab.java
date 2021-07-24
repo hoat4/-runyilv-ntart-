@@ -179,7 +179,10 @@ public class SellingTab implements OperationListener {
 
         TextField barcodeField = new TextField();
         UIUtil.barcodeField(barcodeField, text -> {
+            text = text.replaceAll("[^0-9*]", "");
+
             if (text.length() > 20) {
+                barcodeField.setText("");
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Érvénytelen vonalkód");
                 alert.setHeaderText("A megadott vonalkód túl hosszú");
@@ -187,9 +190,38 @@ public class SellingTab implements OperationListener {
                 alert.showAndWait();
                 return;
             }
+            barcodeField.setText(text);
 
-            main.dataRoot.articles.stream().filter(a -> Objects.equals(a.barCode, text)).findAny().ifPresent(a -> {
-                addArticle(a);
+            int quantity;
+            String barcode;
+
+            if (text.contains("*")) {
+                quantity = Integer.parseInt(text.substring(0, text.indexOf('*')));
+                barcode = text.substring(text.indexOf('*') + 1);
+                if (barcode.contains("*")) {
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("Érvénytelen vonalkód");
+                    alert.setContentText("A megadott vonalkódban egynél több csillag is szerepel. ");
+                    alert.showAndWait();
+                    Platform.runLater(() -> barcodeField.setText(""));
+                    return;
+                }
+            } else {
+                quantity = 1;
+                barcode = text;
+            }
+
+            if (barcode.length() > 5 && main.dataRoot.articles.stream().noneMatch(a->a.barCode != null && a.barCode.startsWith(barcode))) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Érvénytelen vonalkód");
+                alert.setHeaderText("Nincs a megadott vonalkódhoz tartozó termék");
+                alert.showAndWait();
+                Platform.runLater(() -> barcodeField.setText(""));
+                return;
+            }
+
+            main.dataRoot.articles.stream().filter(a -> Objects.equals(a.barCode, barcode)).findAny().ifPresent(a -> {
+                addArticle(a, quantity);
                 Platform.runLater(() -> barcodeField.setText(""));
             });
         }, () -> {
@@ -301,8 +333,13 @@ public class SellingTab implements OperationListener {
                 a -> a.barCode == null ? List.of(a.name) : List.of(a.name, a.barCode));
         articleSearchableTable.textField.setFocusTraversable(true);
 
+        TextField quantityField = new TextField("1");
+
         Platform.runLater(articleSearchableTable.textField::requestFocus);
-        dialog.getDialogPane().setContent(articleSearchableTable.build());
+        dialog.getDialogPane().setContent(new MigPane().
+                add(new Label("Mennyiség: ")).
+                add(quantityField, "wrap").
+                add(articleSearchableTable.build(), "span 2"));
         dialog.getDialogPane().setPrefWidth(900);
         dialog.getDialogPane().setPrefHeight(800);
         dialog.setResizable(true);
@@ -314,16 +351,18 @@ public class SellingTab implements OperationListener {
                 new ButtonType("Mégsem", ButtonBar.ButtonData.CANCEL_CLOSE)
         );
         dialog.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
+        dialog.getDialogPane().lookupButton(addButtonType).disableProperty().bind(createBooleanBinding(() ->
+                        quantityField.getText().matches("[0-9]+") && articlesTable.getSelectionModel().getSelectedItem() != null,
+                quantityField.textProperty(), articlesTable.getSelectionModel().selectedItemProperty()));
         dialog.setResultConverter(b -> b == addButtonType ? articlesTable.getSelectionModel().getSelectedItem() : null);
 
-        dialog.showAndWait().ifPresent(this::addArticle);
+        dialog.showAndWait().ifPresent(a -> addArticle(a, Integer.parseInt(quantityField.getText())));
     }
 
-
-    private void addArticle(Article a) {
+    private void addArticle(Article a, int quantity) {
         final Sale s = new Sale();
         s.pricePerProduct = a.sellingPrice;
-        s.quantity = 1;
+        s.quantity = quantity;
         s.article = a;
         s.seller = main.logonUser.name;
         s.timestamp = Instant.now();
