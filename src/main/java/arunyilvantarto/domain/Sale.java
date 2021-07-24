@@ -19,6 +19,8 @@ public class Sale {
 
     public BillID billID;
 
+    public int paymentID;
+
     public static abstract class BillID {
         @JsonCreator
         public static BillID parse(String s) {

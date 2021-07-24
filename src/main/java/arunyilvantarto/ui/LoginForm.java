@@ -135,9 +135,25 @@ public class LoginForm {
                 Platform.runLater(() -> {
                     progressIndicator.setVisible(false);
 
+                    TextInputDialog d1 = new TextInputDialog();
+                    d1.setTitle("Zárás");
+                    d1.setHeaderText("Az előző értékesítési periódus nem lett bezárva");
+                    d1.setContentText("Bankkártyás forgalom: ");
+                    d1.getDialogPane().getButtonTypes().remove(ButtonType.CANCEL);
+                    d1.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(
+                            createBooleanBinding(() -> !d1.getEditor().getText().matches("[0-9]+"), d1.getEditor().textProperty()));
+
+                    Optional<String> o2 = d1.showAndWait();
+                    if  (o2.isEmpty()) {
+                        loginForm.setOpacity(1);
+                        app.logonUser = null;
+                        return;
+                    }
+                    int creditCardRevenue = Integer.parseInt(o2.get());
+
                     TextInputDialog d = new TextInputDialog();
                     d.setTitle("Zárás");
-                    d.setHeaderText("Az előző értékesítési periódus nem lett bezárva, " + p.remainingCash() + " Ft maradt elvileg a kasszában. ");
+                    d.setHeaderText(p.remainingCash(creditCardRevenue) + " Ft maradt elvileg a kasszában. ");
                     d.setContentText("Kasszában hagyott váltópénz: ");
                     d.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(
                             createBooleanBinding(() -> !d.getEditor().getText().matches("[0-9]+"), d.getEditor().textProperty()));
@@ -146,6 +162,7 @@ public class LoginForm {
                         progressIndicator.setVisible(true);
 
                         p.closeCash = Integer.parseInt(s);
+                        p.closeCreditCardAmount = p.openCreditCardAmount + creditCardRevenue;
                         app.executor.execute(() -> SellingTab.closePeriod(app, p));
                         app.executor.execute(this::loadAndShowNextPage);
                     }, () -> {

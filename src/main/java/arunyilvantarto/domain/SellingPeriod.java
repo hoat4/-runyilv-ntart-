@@ -16,8 +16,8 @@ public class SellingPeriod {
 
     public List<Sale> sales;
 
-    public int remainingCash() {
-        return sales.stream().mapToInt(s -> s.pricePerProduct * s.quantity).reduce(openCash, Integer::sum);
+    public int remainingCash(int creditCardRevenue) {
+        return sales.stream().mapToInt(s -> s.pricePerProduct * s.quantity).reduce(openCash - creditCardRevenue, Integer::sum);
     }
 
     public int revenue() {

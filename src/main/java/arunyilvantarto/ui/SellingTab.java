@@ -287,7 +287,8 @@ public class SellingTab implements OperationListener {
         dialog.setTitle("Termékek");
 
         TableView<Article> articlesTable = articlesTable();
-        SearchableTable<Article> articleSearchableTable = new SearchableTable<>(articlesTable, a -> List.of(a.name, a.barCode));
+        SearchableTable<Article> articleSearchableTable = new SearchableTable<>(articlesTable,
+                a -> a.barCode == null ? List.of(a.name) : List.of(a.name, a.barCode));
         articleSearchableTable.textField.setFocusTraversable(true);
 
         Platform.runLater(articleSearchableTable.textField::requestFocus);
@@ -328,18 +329,20 @@ public class SellingTab implements OperationListener {
     }
 
     private void pay() {
+        int roundedPrice = (sumPrice + 2) / 5 * 5;
+
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Fizetés");
-        dialog.setHeaderText("Fizetés készpénzzel");
+        dialog.setHeaderText("Fizetendő összeg: " + roundedPrice + " Ft");
         dialog.setContentText("Kapott készpénz: ");
-        dialog.getEditor().setText(Integer.toString(sumPrice));
+        dialog.getEditor().setText(Integer.toString(roundedPrice));
         dialog.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
         dialog.showAndWait().ifPresent(s -> {
             int receivedCash = Integer.parseInt(s);
-            if (receivedCash < sumPrice) {
+            if (receivedCash < roundedPrice) {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Hibás összeg");
-                alert.setHeaderText("Alulfizetés " + (sumPrice - receivedCash) + " forinttal");
+                alert.setHeaderText("Alulfizetés " + (roundedPrice - receivedCash) + " forinttal");
                 alert.setContentText("A kapott összeg (" + receivedCash + " Ft) " + " kevesebb, mint a vásárolt termékek árának összege. ");
                 alert.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
                 alert.showAndWait();
@@ -347,10 +350,10 @@ public class SellingTab implements OperationListener {
                 return;
             }
 
-            if (receivedCash > sumPrice) {
+            if (receivedCash > roundedPrice) {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Visszajáró");
-                alert.setHeaderText("Visszajáró: " + (receivedCash - sumPrice) + " Ft");
+                alert.setHeaderText("Visszajáró: " + (receivedCash - roundedPrice) + " Ft");
                 alert.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
                 alert.showAndWait();
             }
@@ -474,7 +477,7 @@ public class SellingTab implements OperationListener {
 
         TextInputDialog d2 = new TextInputDialog();
         d2.setTitle("Zárás");
-        d2.setHeaderText(sellingPeriod.remainingCash() - creditCardRevenue + " Ft maradt elvileg a kasszában. ");
+        d2.setHeaderText(sellingPeriod.remainingCash(creditCardRevenue) + " Ft maradt elvileg a kasszában. ");
         d2.setContentText("Kasszában hagyott váltópénz: ");
         d2.getDialogPane().getButtonTypes().remove(ButtonType.CANCEL);
         d2.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(
