@@ -70,7 +70,7 @@ public class RevenueTab implements OperationListener {
                 col("Záró kp.", 90, 90, p -> p.endTime == null ? "" : p.closeCash + " Ft").
                 col("Nyitó bk.", 90, 90, p -> p.openCreditCardAmount + " Ft").
                 col("Záró bk.", 90, 90, p -> p.endTime == null ? "" : p.closeCreditCardAmount + " Ft").
-                col("Forgalom", 120, 150, p -> p.sales.stream().mapToInt(RevenueTab::revenue).sum() + " Ft").
+                col("Forgalom", 120, 150, p -> p.revenue() + " Ft").
                 build();
 
         salesInPeriodTable = new UIUtil.TableBuilder<Sale>(List.of()).
@@ -138,13 +138,6 @@ public class RevenueTab implements OperationListener {
             button.setText(s + " Ft");
             main.salesIO.modifyCash(main.logonUser.name, cash, creditCardAmount);
         });
-    }
-
-    private static int revenue(Sale sale) {
-        if (sale.billID instanceof Sale.PeriodBillID || sale.billID instanceof Sale.PeriodCardBillID)
-            return sale.pricePerProduct * sale.quantity;
-        else
-            return 0;
     }
 
 }

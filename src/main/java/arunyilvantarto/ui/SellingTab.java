@@ -47,6 +47,8 @@ public class SellingTab implements OperationListener {
     private Node mainPane;
     private Node tickIconPane;
 
+    private int paymentIDCounter;
+
     @SuppressWarnings("ConstantConditions")
     private final Image tickIcon = new Image(SellingTab.class.getResource("/arunyilvantarto/tickIcon.png").toString());
 
@@ -85,6 +87,7 @@ public class SellingTab implements OperationListener {
                 app.salesIO.beginPeriod(sellingPeriod);
 
                 sellingTab.sellingPeriod = sellingPeriod;
+                sellingTab.paymentIDCounter = lastSellingPeriodAndCash.lastPaymentID + 1;
                 app.switchPage(scene, sellingTab);
             }, () -> {
                 if (cancelCallback != null)
@@ -95,7 +98,7 @@ public class SellingTab implements OperationListener {
 
     public static SellingPeriodAndCash lastSellingPeriod(SalesIO salesIO) {
         SellingPeriod[] p = new SellingPeriod[1];
-        int[] c = new int[2];
+        int[] c = new int[3];
         salesIO.read(new SalesVisitor() {
 
             @Override
@@ -114,18 +117,25 @@ public class SellingTab implements OperationListener {
                 c[0] = cash;
                 c[1] = creditCardAmount;
             }
+
+            @Override
+            public void sale(Sale sale) {
+                c[2] = Math.max(sale.paymentID, c[2]);
+            }
         });
-        return new SellingPeriodAndCash(p[0], c[0], c[1]);
+        return new SellingPeriodAndCash(p[0], c[0], c[1], c[2]);
     }
 
     public static class SellingPeriodAndCash {
         public final SellingPeriod sellingPeriod;
         public final int cash, creditCardAmount;
+        public final int lastPaymentID;
 
-        public SellingPeriodAndCash(SellingPeriod sellingPeriod, int cash, int creditCardAmount) {
+        public SellingPeriodAndCash(SellingPeriod sellingPeriod, int cash, int creditCardAmount, int lastPaymentID) {
             this.sellingPeriod = sellingPeriod;
             this.cash = cash;
             this.creditCardAmount = creditCardAmount;
+            this.lastPaymentID = lastPaymentID;
         }
     }
 
@@ -317,6 +327,7 @@ public class SellingTab implements OperationListener {
         s.article = a;
         s.seller = main.logonUser.name;
         s.timestamp = Instant.now();
+        s.paymentID = paymentIDCounter;
         itemsTable.getItems().add(s);
 
         sumPrice += s.quantity * s.article.sellingPrice;
@@ -361,6 +372,7 @@ public class SellingTab implements OperationListener {
             for (Sale sale : itemsTable.getItems())
                 sale.billID = new Sale.PeriodBillID(sellingPeriod.id);
 
+            paymentIDCounter++;
             payDone();
         });
 

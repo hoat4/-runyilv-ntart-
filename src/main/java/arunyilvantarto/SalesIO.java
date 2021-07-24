@@ -19,7 +19,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class SalesIO {
 
     private static final int MIN_COLS = 6;
-    private static final int MAX_COLS = 7;
+    private static final int MAX_COLS = 8;
 
     private static final String PERIOD_OPEN_PRODUCT_NAME = "NYITÁS";
     private static final String PERIOD_CLOSE_PRODUCT_NAME = "ZÁRÁS";
@@ -36,7 +36,7 @@ public class SalesIO {
     }
 
     public synchronized void begin() {
-        writeImpl("Időpont\tTermék\tMennyiség\tTermékenkénti ár\tEladó\tPeriódusazonosító vagy személynév\n");
+        writeImpl("Időpont\tTermék\tMennyiség\tTermékenkénti ár\tEladó\tPeriódusazonosító vagy személynév\tBankkártya összeg\tVásárlásazonosító\n");
     }
 
     public synchronized void beginPeriod(SellingPeriod period) {
@@ -45,7 +45,7 @@ public class SalesIO {
 
         LocalDateTime timestamp = LocalDateTime.ofInstant(period.beginTime, ZoneId.systemDefault());
         writeImpl(timestamp, PERIOD_OPEN_PRODUCT_NAME, 1, -period.openCash, period.username,
-                new Sale.PeriodBillID(period.id), period.openCreditCardAmount);
+                new Sale.PeriodBillID(period.id), period.openCreditCardAmount, 0);
     }
 
     public synchronized void sale(Sale sale) {
@@ -53,7 +53,7 @@ public class SalesIO {
             throw new IllegalArgumentException("empty product name or seller name");
 
         LocalDateTime timestamp = LocalDateTime.ofInstant(sale.timestamp, ZoneId.systemDefault());
-        writeImpl(timestamp, sale.article.name, sale.quantity, sale.pricePerProduct, sale.seller, sale.billID, -1);
+        writeImpl(timestamp, sale.article.name, sale.quantity, sale.pricePerProduct, sale.seller, sale.billID, -1, sale.paymentID);
     }
 
     public synchronized void endPeriod(SellingPeriod period) {
@@ -62,12 +62,12 @@ public class SalesIO {
 
         LocalDateTime timestamp = LocalDateTime.ofInstant(period.endTime, ZoneId.systemDefault());
         writeImpl(timestamp, PERIOD_CLOSE_PRODUCT_NAME, 1, period.closeCash, period.username,
-                new Sale.PeriodBillID(period.id),  period.closeCreditCardAmount);
+                new Sale.PeriodBillID(period.id),  period.closeCreditCardAmount, 0);
     }
 
     public synchronized void modifyCash(String username, int cash, int creditCardAmount) {
         LocalDateTime timestamp = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
-        writeImpl(timestamp, MODIFY_CASH_PRODUCT_NAME, 0, cash, username, null, creditCardAmount);
+        writeImpl(timestamp, MODIFY_CASH_PRODUCT_NAME, 0, cash, username, null, creditCardAmount,  0);
     }
 
     public synchronized void read(SalesVisitor visitor) {
@@ -121,7 +121,8 @@ public class SalesIO {
         int pricePerProduct = Integer.parseInt(row[3]);
         String seller = row[4];
         Sale.BillID billID = Sale.BillID.parse(row[5]);
-        int creditCardAmount = row[6] == null ? 0: Integer.parseInt(row[6]);
+        int creditCardAmount = row[6] == null || row[6].equals("-") ? 0: Integer.parseInt(row[6]);
+        int purchaseID = row[7] == null || row[7].equals("-") ? 0: Integer.parseInt(row[7]);
 
         switch (productName) {
             case PERIOD_OPEN_PRODUCT_NAME:
@@ -159,6 +160,7 @@ public class SalesIO {
                 sale.quantity = quantity;
                 sale.pricePerProduct = pricePerProduct;
                 sale.billID = billID;
+                sale.paymentID = purchaseID;
                 currentReadPeriod.sales.add(sale);
                 visitor.sale(sale);
                 break;
@@ -166,10 +168,12 @@ public class SalesIO {
     }
 
     private void writeImpl(LocalDateTime timestamp, String productName, int quantity, int pricePerProduct,
-                           String seller, Sale.BillID periodID, int creditCardAmount) {
+                           String seller, Sale.BillID periodID, int creditCardAmount, int purchaseID) {
         writeImpl(timestamp + "\t" + productName + "\t" + quantity + "\t" + pricePerProduct + "\t" + seller + "\t" +
                 (periodID == null ? "-" : periodID.toString()) +
-                (creditCardAmount == -1 ? "" : "\t" + creditCardAmount) + "\n");
+                (creditCardAmount == -1 ? "\t-" : "\t" + creditCardAmount) +
+                (purchaseID == 0 ? "\t-" : "\t" + purchaseID) +
+                "\n");
     }
 
     private void writeImpl(String l) {

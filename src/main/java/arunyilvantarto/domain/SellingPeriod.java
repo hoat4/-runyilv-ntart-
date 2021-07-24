@@ -3,6 +3,8 @@ package arunyilvantarto.domain;
 import java.time.Instant;
 import java.util.List;
 
+import static java.util.stream.Collectors.groupingBy;
+
 public class SellingPeriod {
 
     public int id;
@@ -17,14 +19,22 @@ public class SellingPeriod {
     public List<Sale> sales;
 
     public int remainingCash(int creditCardRevenue) {
-        return sales.stream().mapToInt(s -> s.pricePerProduct * s.quantity).reduce(openCash - creditCardRevenue, Integer::sum);
+        return revenue() + openCash - creditCardRevenue;
     }
 
     public int revenue() {
-        return sales.stream().mapToInt(s -> s.pricePerProduct * s.quantity).reduce(openCash, Integer::sum);
+        return sales.stream().collect(groupingBy(sale -> sale.paymentID)).values().stream().
+                mapToInt(s -> round(s.stream().
+                        filter(sale -> sale.billID instanceof Sale.PeriodBillID || sale.billID instanceof Sale.PeriodCardBillID).
+                        mapToInt(sale -> sale.pricePerProduct * sale.quantity).sum())).
+                sum();
     }
 
     public boolean isClosed() {
         return endTime != null;
+    }
+
+    public static int round(int price) {
+        return (price + 2) / 5 * 5;
     }
 }
