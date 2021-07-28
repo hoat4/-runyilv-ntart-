@@ -95,12 +95,16 @@ public class UIUtil {
             return this;
         }
 
-        public TableBuilder<T> customCol(String caption, double minWidth, double maxWidth, Function<T, Object> function) {
-            TableColumn<T, Object> col = new TableColumn<>(caption);
+        public TableBuilder<T> customCol(String caption, double minWidth, double maxWidth, Function<T, Node> function) {
+            TableColumn<T, T> col = new TableColumn<>(caption);
             col.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue()));
-            col.setCellFactory(c -> new TableCell<>() {
-                {
-                    //          setGraphic(function.apply(ge));
+            col.setCellFactory(c -> new TableCell<T, T>() {
+                @Override
+                protected void updateItem(T item, boolean empty) {
+                    if (item == null)
+                        setGraphic(null);
+                    else
+                        setGraphic(function.apply(item));
                 }
             });
             col.setMinWidth(minWidth);

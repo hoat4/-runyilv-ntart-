@@ -7,3 +7,7 @@
 }
 .tool-bar {-fx-padding: .8em;-fx-spacing: .8em;}
 .article-properties .button { -fx-min-width: 6em; }
+
+.revenue-tab .table-view { -fx-font-size: .8em }
+.cash-mismatch-cell { -fx-text-fill: #c00; }
+.expected-cash-label { -fx-font-size: .8em; -fx-text-fill: #777; }
