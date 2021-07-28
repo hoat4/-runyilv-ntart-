@@ -4,7 +4,6 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.paint.Color;
 import javafx.util.StringConverter;
 
 import java.time.Instant;
@@ -49,13 +48,11 @@ public class UIUtil {
         return instant.atZone(ZoneId.systemDefault()).format(UIUtil.DATETIME_FORMAT);
     }
 
-    public static void barcodeField(TextField textField, Consumer<String> handler, Runnable spaceHandler) {
+    public static void barcodeField(TextField textField, Consumer<String> handler) {
         textField.textProperty().addListener((o, old, value) -> {
-            boolean pay = value.contains(" ") && spaceHandler != null; // accelerator-ként szóköz nem ment, textfield kapta el mindenképpen
-            value = value.replace('ö', '0').replace(" ", "");
-            textField.setText(value);
-            if (pay) {
-                spaceHandler.run();
+            String s = value.replace('ö', '0');
+            if (!s.equals(value)) {
+                textField.setText(s);
                 return;
             }
             if (handler != null)

@@ -20,6 +20,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
@@ -224,26 +225,31 @@ public class SellingTab implements OperationListener {
                 addArticle(a, quantity);
                 Platform.runLater(() -> barcodeField.setText(""));
             });
-        }, () -> {
-            if (!barcodeField.getText().isEmpty()) {
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("Fizetés");
-                alert.setHeaderText("Vonalkód mező nem üres");
-                alert.setContentText("Vonalkód mező nem üres, addig nem lehet fizetni");
-                alert.showAndWait();
-                return;
-            }
+        });
+        barcodeField.setOnKeyTyped(e->{
+            if (e.getCode() == SPACE) {
+                e.consume();
 
-            if (itemsTable.getItems().isEmpty()) {
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("Fizetés");
-                alert.setHeaderText("Nincsenek termékek kiválasztva");
-                alert.setContentText("Nincsenek termékek kiválasztva");
-                alert.showAndWait();
-                return;
-            }
+                if (!barcodeField.getText().isEmpty()) {
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("Fizetés");
+                    alert.setHeaderText("Vonalkód mező nem üres");
+                    alert.setContentText("Vonalkód mező nem üres, addig nem lehet fizetni");
+                    alert.showAndWait();
+                    return;
+                }
 
-            pay();
+                if (itemsTable.getItems().isEmpty()) {
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("Fizetés");
+                    alert.setHeaderText("Nincsenek termékek kiválasztva");
+                    alert.setContentText("Nincsenek termékek kiválasztva");
+                    alert.showAndWait();
+                    return;
+                }
+
+                pay();
+            }
         });
         barcodeField.focusedProperty().addListener((o, old, value) -> {
             if (!value)
@@ -495,7 +501,7 @@ public class SellingTab implements OperationListener {
                     alert.showAndWait().ifPresent(b -> stornoByBarcode());
                 }));
             });
-        }, null);
+        });
         dialog.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(createBooleanBinding(() ->
                 !UIUtil.isBarcode(dialog.getEditor().getText()), dialog.getEditor().textProperty()));
         dialog.showAndWait().ifPresent(s -> {
