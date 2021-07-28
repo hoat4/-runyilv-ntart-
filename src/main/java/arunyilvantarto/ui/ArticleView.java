@@ -1,7 +1,9 @@
 package arunyilvantarto.ui;
 
+import arunyilvantarto.SalesVisitor;
 import arunyilvantarto.domain.Article;
 import arunyilvantarto.domain.Item;
+import arunyilvantarto.domain.Sale;
 import arunyilvantarto.operations.*;
 import arunyilvantarto.ui.UIUtil.LocalDateStringConverter;
 import javafx.application.Platform;
@@ -18,6 +20,8 @@ import org.tbee.javafx.scene.layout.MigPane;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
@@ -33,23 +37,51 @@ public class ArticleView {
     private Button barcodeButton;
     private Button quantityButton;
 
+    private TabPane tabPane;
+    private Tab salesTab;
+
     public ArticleView(ArticlesTab articlesTab, Article article) {
         this.articlesTab = articlesTab;
         this.article = article;
     }
 
-    public Node build() {
+    public Node build(boolean showSalesTab) {
+        Tab aquisitionsTab = new Tab("Beszerzések");
+        tabPane = new TabPane(
+                aquisitionsTab,
+                salesTab = new Tab("Eladások"));
+        if (showSalesTab) {
+            salesTab.setContent(articleStatistics());
+            tabPane.getSelectionModel().select(salesTab);
+            articlesTab.main.runInBackground(() -> {
+                Node aquisitionsTabContent = aquisitionsTabContent();
+                Platform.runLater(() -> aquisitionsTab.setContent(aquisitionsTabContent));
+            });
+        }else {
+            aquisitionsTab.setContent(aquisitionsTabContent());
+            articlesTab.main.runInBackground(() -> {
+                Node salesTabContent = articleStatistics();
+                Platform.runLater(() -> salesTab.setContent(salesTabContent));
+            });
+        }
+
+        TitledPane titledPane = new TitledPane(article.name, tabPane);
+        titledPane.setCollapsible(false);
+        return titledPane;
+    }
+
+    private MigPane aquisitionsTabContent() {
         Button newProductButton = new Button("Új beszerzés");
         newProductButton.setOnAction(evt -> newItem());
 
-        TitledPane titledPane = new TitledPane(article.name,
-                new MigPane("fill", "[grow 2][grow 1]", "[] [] [grow]").
-                        add(articlePropertiesForm()).
-                        add(articleStatistics(), "spany, grow, wrap").
-                        add(newProductButton, "grow, wrap").
-                        add(itemTable(), "grow"));
-        titledPane.setCollapsible(false);
-        return titledPane;
+        return new MigPane("fill, wrap 1", null, "[] [] [grow]").
+                add(articlePropertiesForm()).
+                add(newProductButton, "grow").
+                add(itemTable(), "grow");
+    }
+
+    public boolean salesTabShown() {
+        return tabPane.getSelectionModel().getSelectedItem() == salesTab;
     }
 
     public void onEvent(AdminOperation op) {
@@ -156,8 +188,8 @@ public class ArticleView {
             d.setContentText("Vonalkód: ");
             d.getEditor().setText("");
             d.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(createBooleanBinding(
-                    () -> !UIUtil.isBarcode(d.getEditor().getText()) 
-                          && !d.getEditor().getText().isEmpty(), d.getEditor().textProperty()
+                    () -> !UIUtil.isBarcode(d.getEditor().getText())
+                            && !d.getEditor().getText().isEmpty(), d.getEditor().textProperty()
             ));
             UIUtil.barcodeField(d.getEditor(), null);
             d.showAndWait().ifPresent(s -> {
@@ -178,7 +210,7 @@ public class ArticleView {
             });
         });
 
-        return new MigPane().
+        MigPane p = new MigPane().
                 add(new Label("Név: ")).
                 add(new Label(article.name), "grow, wrap").
                 add(new Label("Mennyiség: ")).
@@ -187,13 +219,12 @@ public class ArticleView {
                 add(priceButton, "grow, wrap").
                 add(new Label("Vonalkód: ")).
                 add(barcodeButton, "grow, wrap");
+        p.getStyleClass().add("article-properties");
+        return p;
     }
 
     private Node articleStatistics() {
-        if (true)
-            return new Label();
-
-        DatePicker fromDatePicker = new DatePicker(LocalDate.now().minusDays(10));
+        DatePicker fromDatePicker = new DatePicker(LocalDate.now().minusDays(30));
         fromDatePicker.setConverter(new LocalDateStringConverter());
         DatePicker toDatePicker = new DatePicker(LocalDate.now());
         toDatePicker.setConverter(new LocalDateStringConverter());
@@ -206,8 +237,24 @@ public class ArticleView {
 
         LineChart<String, Number> chart = new LineChart<>(xAxis, yAxis);
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        for (LocalDate d = fromDatePicker.getValue(); !d.isAfter(toDatePicker.getValue()); d = d.plusDays(1))
-            series.getData().add(new XYChart.Data<>(d.toString(), (int) (Math.random() * 100)));
+        articlesTab.main.salesIO.read(new SalesVisitor() {
+            private final Map<LocalDate, Integer> sales = new HashMap<>();
+
+            @Override
+            public void sale(Sale sale) {
+                int value = sale.article.name.equals(article.name) ? 1 : 0;
+                sales.compute(LocalDate.from(sale.timestamp.atZone(ZoneId.systemDefault())), (d, c) -> c == null ? value : c + value);
+            }
+
+            @Override
+            public void end() {
+                for (LocalDate d = fromDatePicker.getValue(); !d.isAfter(toDatePicker.getValue()); d = d.plusDays(1)) {
+                    if (sales.containsKey(d)) {
+                        series.getData().add(new XYChart.Data<>(d.toString(), sales.get(d)));
+                    }
+                }
+            }
+        });
         chart.getData().add(series);
 
         chart.setLegendVisible(false);

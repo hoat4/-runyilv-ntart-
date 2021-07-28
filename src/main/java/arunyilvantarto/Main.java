@@ -149,10 +149,20 @@ public class Main extends Application {
         return data;
     }
 
+    public void runInBackground(Runnable task) {
+        executor.execute(() -> {
+            try {
+                task.run();
+            } catch (Throwable e) {
+                Thread.currentThread().getUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
+            }
+        });
+    }
+
     public void executeOperation(AdminOperation op) {
         try {
             System.out.println(JSON_MAPPER.writeValueAsString(op));
-        }catch(Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 

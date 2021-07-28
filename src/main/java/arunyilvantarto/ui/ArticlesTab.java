@@ -84,8 +84,10 @@ public class ArticlesTab {
         table.getColumns().addAll(nameColumn, barcodeColumn, priceColumn, quantityColumn);
 
         table.getSelectionModel().selectedItemProperty().addListener((o, oldValue, newValue) -> {
+            boolean showSalesTab = visibleArticleView != null && visibleArticleView.salesTabShown();
             articleViewContainer.getChildren().clear();
-            articleViewContainer.add((visibleArticleView = new ArticleView(this, newValue)).build(), "grow");
+            articleViewContainer.add((visibleArticleView = new ArticleView(this, newValue)).
+                    build(showSalesTab), "grow");
         });
         table.getItems().addAll(main.dataRoot.articles);
 
