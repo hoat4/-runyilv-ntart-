@@ -36,7 +36,7 @@ public class SearchableTable<T> {
     }
 
     public Node build() {
-        return new MigPane("fill", null, "[] related [grow]").
+        return new MigPane("fill, insets 0", null, "[] related [grow]").
                 add(textField, "grow, wrap").
                 add(table, "grow, wrap");
     }

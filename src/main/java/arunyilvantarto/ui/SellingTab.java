@@ -226,7 +226,7 @@ public class SellingTab implements OperationListener {
                 Platform.runLater(() -> barcodeField.setText(""));
             });
         });
-        barcodeField.setOnKeyTyped(e->{
+        barcodeField.setOnKeyPressed(e->{
             if (e.getCode() == SPACE) {
                 e.consume();
 
@@ -342,10 +342,10 @@ public class SellingTab implements OperationListener {
         TextField quantityField = new TextField("1");
 
         Platform.runLater(articleSearchableTable.textField::requestFocus);
-        dialog.getDialogPane().setContent(new MigPane().
+        dialog.getDialogPane().setContent(new MigPane("fill", null, "[] unrelated [grow]").
                 add(new Label("Mennyiség: ")).
-                add(quantityField, "wrap").
-                add(articleSearchableTable.build(), "span 2"));
+                add(quantityField, "grow, wrap").
+                add(articleSearchableTable.build(), "grow, gapleft 0, gapright 0, span 2"));
         dialog.getDialogPane().setPrefWidth(900);
         dialog.getDialogPane().setPrefHeight(800);
         dialog.setResizable(true);
@@ -358,7 +358,7 @@ public class SellingTab implements OperationListener {
         );
         dialog.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
         dialog.getDialogPane().lookupButton(addButtonType).disableProperty().bind(createBooleanBinding(() ->
-                        quantityField.getText().matches("[0-9]+") && articlesTable.getSelectionModel().getSelectedItem() != null,
+                        !quantityField.getText().matches("[0-9]+") || articlesTable.getSelectionModel().getSelectedItem() == null,
                 quantityField.textProperty(), articlesTable.getSelectionModel().selectedItemProperty()));
         dialog.setResultConverter(b -> b == addButtonType ? articlesTable.getSelectionModel().getSelectedItem() : null);
 
