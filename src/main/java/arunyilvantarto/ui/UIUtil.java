@@ -20,7 +20,7 @@ import static javafx.scene.paint.Color.color;
 
 public class UIUtil {
 
-    public static final DateTimeFormatter DATETIME_FORMAT =DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm");
+    public static final DateTimeFormatter DATETIME_FORMAT = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm");
 
     public static boolean isLocalDate(String s) {
         try {
@@ -98,9 +98,9 @@ public class UIUtil {
         public TableBuilder<T> customCol(String caption, double minWidth, double maxWidth, Function<T, Object> function) {
             TableColumn<T, Object> col = new TableColumn<>(caption);
             col.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue()));
-            col.setCellFactory(c->new TableCell<>(){
+            col.setCellFactory(c -> new TableCell<>() {
                 {
-          //          setGraphic(function.apply(ge));
+                    //          setGraphic(function.apply(ge));
                 }
             });
             col.setMinWidth(minWidth);

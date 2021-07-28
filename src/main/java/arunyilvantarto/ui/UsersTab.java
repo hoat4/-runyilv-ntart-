@@ -43,7 +43,7 @@ public class UsersTab {
     }
 
     private Button newUserButton() {
-        Button button = new Button("New user");
+        Button button = new Button("Felhasználó hozzáadása");
         button.setOnAction(evt -> {
             TextInputDialog dialog = new TextInputDialog();
             dialog.setTitle("Új felhasználó");
@@ -76,9 +76,10 @@ public class UsersTab {
 
         usersTable.getItems().addAll(data.users);
         usersTable.getSelectionModel().selectedItemProperty().addListener((o, old, value) -> {
+            boolean showStaffBill = userView != null && userView.staffBillShown();
             userView = new UserView(app, value);
             userViewContainer.getChildren().clear();
-            userViewContainer.add(userView.build(), "grow");
+            userViewContainer.add(userView.build(showStaffBill), "grow");
         });
 
         return usersTable;

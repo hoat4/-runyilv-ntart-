@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.time.Instant;
+import java.util.Objects;
 
 public class Sale {
 
@@ -48,6 +49,19 @@ public class Sale {
         public String toString() {
             return Integer.toString(periodID);
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PeriodBillID that = (PeriodBillID) o;
+            return periodID == that.periodID;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(periodID);
+        }
     }
 
     public static class PeriodCardBillID extends BillID {
@@ -61,6 +75,19 @@ public class Sale {
         public String toString() {
             return periodID + "-CARD";
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PeriodCardBillID that = (PeriodCardBillID) o;
+            return periodID == that.periodID;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(periodID);
+        }
     }
 
     public static class StaffBillID extends BillID {
@@ -73,6 +100,19 @@ public class Sale {
         @Override
         public String toString() {
             return username;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            StaffBillID that = (StaffBillID) o;
+            return username.equals(that.username);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(username);
         }
     }
 }
