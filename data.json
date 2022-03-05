@@ -3,12 +3,12 @@
     "name" : "u",
     "role" : "ROOT",
     "passwordHash" : "obGYKw8+PnQcilppY7LuB7KGqhB3PYmeue7d6oZYLlg=",
-    "staffBill" : 0
+    "staffBill" : 128
   }, {
     "name" : "a",
     "role" : "STAFF",
     "passwordHash" : "9b5ECwOqVL8CITg44NW+CuhJRFYYVzAUmtVfH8vRj88=",
-    "staffBill" : 75
+    "staffBill" : 108
   }, {
     "name" : "b",
     "role" : "SELLER",
@@ -18,7 +18,7 @@
     "name" : "c",
     "role" : "ROOT",
     "passwordHash" : "9b5ECwOqVL8CITg44NW+CuhJRFYYVzAUmtVfH8vRj88=",
-    "staffBill" : 0
+    "staffBill" : 300
   }, {
     "name" : "x",
     "role" : "ADMIN",
@@ -31,11 +31,39 @@
     "staffBill" : 0
   } ],
   "articles" : [ {
-    "timestamp" : 1625351321.659870100,
-    "name" : "a",
-    "barCode" : "1234",
-    "sellingPrice" : 32,
+    "timestamp" : null,
+    "name" : "Kitűző képpel",
+    "barCode" : null,
+    "sellingPrice" : 0,
     "items" : [ ],
-    "stockQuantity" : -34
+    "stockQuantity" : 0
+  }, {
+    "timestamp" : 1625861928.879748000,
+    "name" : "b",
+    "barCode" : null,
+    "sellingPrice" : 23,
+    "items" : [ ],
+    "stockQuantity" : 0
+  }, {
+    "timestamp" : 1627163234.300583900,
+    "name" : "c",
+    "barCode" : "23456789",
+    "sellingPrice" : 100,
+    "items" : [ ],
+    "stockQuantity" : 0
+  }, {
+    "timestamp" : 1627163278.602012200,
+    "name" : "d",
+    "barCode" : "30456789",
+    "sellingPrice" : 100,
+    "items" : [ ],
+    "stockQuantity" : -3
+  }, {
+    "timestamp" : 1627469673.524480600,
+    "name" : "e",
+    "barCode" : "1230",
+    "sellingPrice" : 101,
+    "items" : [ ],
+    "stockQuantity" : -2
   } ]
 }

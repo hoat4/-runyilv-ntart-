@@ -130,7 +130,7 @@ public class UserView {
     private Node staffBill() {
         return staffBillTable = new UIUtil.TableBuilder<Sale>(List.of()).
                 col("Dátum", 100, UNLIMITED_WIDTH, sale->sale.timestamp.atZone(ZoneId.systemDefault()).format(UIUtil.DATETIME_FORMAT)).
-                col("Termék", 170, UNLIMITED_WIDTH, sale -> sale.article.name).
+                col("Termék", 170, UNLIMITED_WIDTH, sale -> sale.article == null ? "" : sale.article.name).
                 col("Ár", 50, UNLIMITED_WIDTH, sale -> sale.pricePerProduct).
                 col("Mennyiség", 80, UNLIMITED_WIDTH, sale -> sale.quantity).
                 col("Összeg", 80, UNLIMITED_WIDTH, sale -> sale.pricePerProduct * sale.quantity).

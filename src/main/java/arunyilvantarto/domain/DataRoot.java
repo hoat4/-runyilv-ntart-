@@ -2,6 +2,7 @@ package arunyilvantarto.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class DataRoot {
 
@@ -9,8 +10,12 @@ public class DataRoot {
     public List<Article> articles = new ArrayList<>();
 
     public Article article(String name) {
-        return articles.stream().filter(u -> u.name.equals(name)).findAny().
+        return findArticle(name).
                 orElseThrow(() -> new RuntimeException("nincs ilyen termék: " + name));
+    }
+
+    public Optional<Article> findArticle(String name) {
+        return articles.stream().filter(u -> u.name.equals(name)).findAny();
     }
 
     public User user(String username) {

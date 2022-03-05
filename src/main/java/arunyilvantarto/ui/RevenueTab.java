@@ -107,7 +107,8 @@ public class RevenueTab implements OperationListener {
                 build();
 
         salesInPeriodTable = new UIUtil.TableBuilder<Sale>(List.of()).
-                col("Termék", 100, UIUtil.TableBuilder.UNLIMITED_WIDTH, s -> s.article.name).
+                col("Termék", 100, UIUtil.TableBuilder.UNLIMITED_WIDTH,
+                        s -> s.article == null ? "" : s.article.name).
                 col("Mennyiség", 120, 100, s -> s.quantity).
                 col("Bevétel", 100, 100, s -> s.pricePerProduct * s.quantity).
                 placeholder("Nem volt termék eladva").
@@ -125,7 +126,10 @@ public class RevenueTab implements OperationListener {
         salesInPeriodTable.setVisible(false);
 
         MenuItem showProductMenuItem = new MenuItem("Termék megtekintése");
-        showProductMenuItem.disableProperty().bind(isNull(salesInPeriodTable.getSelectionModel().selectedItemProperty()));
+        showProductMenuItem.disableProperty().bind(createBooleanBinding(() ->
+                        salesInPeriodTable.getSelectionModel().getSelectedItem() == null ||
+                                salesInPeriodTable.getSelectionModel().getSelectedItem().article == null,
+                salesInPeriodTable.getSelectionModel().selectedItemProperty()));
         showProductMenuItem.setOnAction(evt -> {
             adminPage.showArticle(salesInPeriodTable.getSelectionModel().getSelectedItem().article);
         });

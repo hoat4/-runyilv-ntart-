@@ -265,7 +265,7 @@ public class SellingTab implements OperationListener {
 
     private TableView<Sale> salesTable() {
         return itemsTable = new UIUtil.TableBuilder<Sale>(new ArrayList<>()).
-                col("Termék", 0, UNLIMITED_WIDTH, sale -> sale.article.name).
+                col("Termék", 0, UNLIMITED_WIDTH, sale -> sale.article == null ? "" : sale.article.name).
                 col("Ár", 150, 150, sale -> sale.pricePerProduct).
                 col("Mennyiség", 150, 150, sale -> sale.quantity).
                 col("Összesen", 150, 150, sale -> sale.pricePerProduct * sale.quantity).
@@ -489,7 +489,10 @@ public class SellingTab implements OperationListener {
 
                 List<Sale> sales = new ArrayList<>(itemsTable.getItems());
                 Collections.reverse(sales);
-                sales.stream().filter(s -> Objects.equals(s.article.barCode, barcode)).findFirst().ifPresentOrElse(s -> {
+                sales.stream().filter(s -> {
+                    assert s.article != null;
+                    return Objects.equals(s.article.barCode, barcode);
+                }).findFirst().ifPresentOrElse(s -> {
                     itemsTable.getItems().remove(s);
                     sumPrice -= s.quantity * article.sellingPrice;
                     updateSumPrice();
@@ -554,7 +557,8 @@ public class SellingTab implements OperationListener {
 
         Map<String, Integer> purchasedProducts = new HashMap<>();
         for (Sale sale : sellingPeriod.sales) {
-            purchasedProducts.put(sale.article.name, purchasedProducts.getOrDefault(sale.article.name, 0) + sale.quantity);
+            if (sale.article != null)
+                purchasedProducts.put(sale.article.name, purchasedProducts.getOrDefault(sale.article.name, 0) + sale.quantity);
         }
 
         Map<String, Integer> staffBillGrowths = new HashMap<>();

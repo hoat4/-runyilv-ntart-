@@ -2,6 +2,7 @@ package arunyilvantarto.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -10,7 +11,7 @@ public class Sale {
 
     public Instant timestamp;
 
-    public Article article;
+    public @Nullable Article article;
 
     public int pricePerProduct;
 

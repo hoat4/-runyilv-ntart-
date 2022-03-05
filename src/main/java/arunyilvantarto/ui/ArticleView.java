@@ -242,7 +242,7 @@ public class ArticleView {
 
             @Override
             public void sale(Sale sale) {
-                int value = sale.article.name.equals(article.name) ? 1 : 0;
+                int value = sale.article != null && sale.article.name.equals(article.name) ? 1 : 0;
                 sales.compute(LocalDate.from(sale.timestamp.atZone(ZoneId.systemDefault())), (d, c) -> c == null ? value : c + value);
             }
 

@@ -49,11 +49,12 @@ public class SalesIO {
     }
 
     public synchronized void sale(Sale sale) {
-        if (sale.article.name.isEmpty() || sale.seller.isEmpty())
+        if (sale.article != null && sale.article.name.isEmpty() || sale.seller.isEmpty())
             throw new IllegalArgumentException("empty product name or seller name");
 
         LocalDateTime timestamp = LocalDateTime.ofInstant(sale.timestamp, ZoneId.systemDefault());
-        writeImpl(timestamp, sale.article.name, sale.quantity, sale.pricePerProduct, sale.seller, sale.billID, -1, sale.paymentID);
+        writeImpl(timestamp, sale.article == null ? null : sale.article.name,
+                sale.quantity, sale.pricePerProduct, sale.seller, sale.billID, -1, sale.paymentID);
     }
 
     public synchronized void endPeriod(SellingPeriod period) {
@@ -155,8 +156,7 @@ public class SalesIO {
                 Sale sale = new Sale();
                 sale.timestamp = timestamp;
                 sale.seller = seller;
-                sale.article = data.articles.stream().filter(a -> a.name.equals(productName)).findAny().
-                        orElseThrow(() -> new RuntimeException("no such article: " + productName));
+                sale.article = data.findArticle(productName).orElse(null);
                 sale.quantity = quantity;
                 sale.pricePerProduct = pricePerProduct;
                 sale.billID = billID;
