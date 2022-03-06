@@ -8,6 +8,7 @@ import arunyilvantarto.domain.Sale;
 import arunyilvantarto.domain.SellingPeriod;
 import arunyilvantarto.operations.AdminOperation;
 import arunyilvantarto.operations.ClosePeriodOp;
+import arunyilvantarto.operations.RenameUserOp;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -28,6 +29,7 @@ public class RevenueTab implements OperationListener {
     private final AdminPage adminPage;
     private TableView<SellingPeriod> periodTable;
     private TableView<Sale> salesInPeriodTable;
+    private List<SellingPeriod> periods = new ArrayList<>();
 
     private int cash, creditCardAmount;
     private Button cashButton, creditCardAmountButton;
@@ -44,25 +46,34 @@ public class RevenueTab implements OperationListener {
     public void onEvent(AdminOperation op) {
         if (op instanceof ClosePeriodOp)
             periodTable.getItems().add(((ClosePeriodOp) op).sellingPeriod);
+        if (op instanceof RenameUserOp) {
+            periods.forEach(p -> {
+                if (p.username.equals(((RenameUserOp) op).oldName))
+                    p.username = ((RenameUserOp) op).newName;
+            });
+            periodTable.refresh();
+        }
+
+        periodOpenCommentPanel.onEvent(op);
+        periodCloseCommentPanel.onEvent(op);
     }
 
     public Node build() {
         Map<SellingPeriod, Integer> openCashMismatch = new HashMap<>();
         Map<SellingPeriod, Integer> closeCashMismatch = new HashMap<>();
 
-        List<SellingPeriod> periods = new ArrayList<>();
         cash = 0;
         creditCardAmount = 0;
         main.salesIO.read(new SalesVisitor() {
             @Override
-            public void beginPeriod(SellingPeriod period) {
+            public void beginPeriod(SellingPeriod period, String comment) {
                 if (period.openCash != cash)
                     openCashMismatch.put(period, cash);
                 periods.add(period);
             }
 
             @Override
-            public void endPeriod(SellingPeriod period) {
+            public void endPeriod(SellingPeriod period, String comment) {
                 int c = period.remainingCash(period.closeCreditCardAmount - period.openCreditCardAmount);
                 if (period.closeCash != c)
                     closeCashMismatch.put(period, c);
@@ -72,7 +83,7 @@ public class RevenueTab implements OperationListener {
             }
 
             @Override
-            public void modifyCash(int cash, int creditCardAmount) {
+            public void modifyCash(String username, int cash, int creditCardAmount) {
                 RevenueTab.this.cash = cash;
                 RevenueTab.this.creditCardAmount = creditCardAmount;
             }
@@ -217,6 +228,7 @@ public class RevenueTab implements OperationListener {
         private TextArea textArea;
         public TitledPane titledPane;
         private final String titlePrefix;
+        private Message currentMessage;
 
         public PeriodCommentPanel(String titlePrefix) {
             this.titlePrefix = titlePrefix;
@@ -233,13 +245,24 @@ public class RevenueTab implements OperationListener {
         }
 
         public void setContent(Message message) {
+            this.currentMessage = message;
             titledPane.setVisible(message != null);
             if (message != null) {
-                titledPane.setText(titlePrefix+" " + message.sender.name + " által");
+                setTitle();
                 textArea.setText(message.text);
             } else {
                 textArea.setText("");
             }
+        }
+
+        private void setTitle() {
+            if (currentMessage != null)
+                titledPane.setText(titlePrefix + " " + currentMessage.sender.name + " által");
+        }
+
+        public void onEvent(AdminOperation op) {
+            if (op instanceof RenameUserOp)
+                setTitle();
         }
     }
 }

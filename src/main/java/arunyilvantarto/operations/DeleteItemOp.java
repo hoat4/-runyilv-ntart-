@@ -1,10 +1,9 @@
 package arunyilvantarto.operations;
 
+import arunyilvantarto.Main;
 import arunyilvantarto.domain.Article;
 import arunyilvantarto.domain.DataRoot;
 import arunyilvantarto.domain.Item;
-
-import java.util.UUID;
 
 public class DeleteItemOp implements AdminOperation {
 
@@ -17,7 +16,7 @@ public class DeleteItemOp implements AdminOperation {
     }
 
     @Override
-    public void execute(DataRoot data) {
+    public void execute(DataRoot data, Main main) {
         final Article article = data.article(articleName);
         if (!article.items.removeIf(i -> i.id.equals(item.id)))
             throw new RuntimeException("nincs ilyen item: " + item.id);
@@ -25,7 +24,7 @@ public class DeleteItemOp implements AdminOperation {
     }
 
     @Override
-    public void undo(DataRoot data) {
+    public void undo(DataRoot data, Main main) {
         Article article = data.article(articleName);
         article.items.add(item);
         article.stockQuantity += item.purchaseQuantity;

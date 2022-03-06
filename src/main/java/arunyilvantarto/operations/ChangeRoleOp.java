@@ -1,5 +1,6 @@
 package arunyilvantarto.operations;
 
+import arunyilvantarto.Main;
 import arunyilvantarto.domain.DataRoot;
 import arunyilvantarto.domain.User;
 
@@ -16,12 +17,12 @@ public class ChangeRoleOp implements AdminOperation{
     }
 
     @Override
-    public void execute(DataRoot data) {
+    public void execute(DataRoot data, Main main) {
         data.user(username).role = newRole;
     }
 
     @Override
-    public void undo(DataRoot data) {
+    public void undo(DataRoot data, Main main) {
         data.user(username).role = oldRole;
     }
 

@@ -1,5 +1,6 @@
 package arunyilvantarto.operations;
 
+import arunyilvantarto.Main;
 import arunyilvantarto.domain.DataRoot;
 
 public class ChangePasswordOp implements AdminOperation {
@@ -15,12 +16,12 @@ public class ChangePasswordOp implements AdminOperation {
     }
 
     @Override
-    public void execute(DataRoot data) {
+    public void execute(DataRoot data, Main main) {
         data.users.stream().filter(u->u.name.equals(username)).findAny().get().passwordHash = newPassword;
     }
 
     @Override
-    public void undo(DataRoot data) {
+    public void undo(DataRoot data, Main main) {
         data.users.stream().filter(u->u.name.equals(username)).findAny().get().passwordHash = oldPassword;
     }
 

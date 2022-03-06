@@ -7,8 +7,9 @@ import java.util.Objects;
 
 public class Message {
 
-    public @JsonIdentityReference
-    User sender;
+    @JsonIdentityReference
+    public User sender;
+
     public Instant timestamp;
     public String text;
     public Subject subject;

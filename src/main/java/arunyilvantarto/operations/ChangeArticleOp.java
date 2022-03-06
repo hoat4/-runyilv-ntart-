@@ -1,9 +1,9 @@
 package arunyilvantarto.operations;
 
+import arunyilvantarto.Main;
 import arunyilvantarto.domain.Article;
 import arunyilvantarto.domain.DataRoot;
 
-import java.util.UUID;
 import java.util.function.BiConsumer;
 
 public class ChangeArticleOp implements AdminOperation {
@@ -21,13 +21,13 @@ public class ChangeArticleOp implements AdminOperation {
     }
 
     @Override
-    public void execute(DataRoot data) {
+    public void execute(DataRoot data, Main main) {
         Article article = data.article(articleID);
         property.setter.accept(article, newValue);
     }
 
     @Override
-    public void undo(DataRoot data) {
+    public void undo(DataRoot data, Main main) {
         Article article = data.article(articleID);
         property.setter.accept(article, oldValue);
     }

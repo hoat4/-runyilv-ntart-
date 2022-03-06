@@ -88,7 +88,7 @@ public class SellingTab implements OperationListener {
                 app.executeOperation(new SendMessageOp(confirmationResult.message));
             }
 
-            app.salesIO.beginPeriod(sellingPeriod, confirmationResult.message);
+            app.salesIO.beginPeriod(sellingPeriod, confirmationResult.message == null ? null : confirmationResult.message.text);
 
             sellingTab.sellingPeriod = sellingPeriod;
             sellingTab.paymentIDCounter = cashState.lastPaymentID + 1;
@@ -102,18 +102,18 @@ public class SellingTab implements OperationListener {
         salesIO.read(new SalesVisitor() {
 
             @Override
-            public void beginPeriod(SellingPeriod period) {
+            public void beginPeriod(SellingPeriod period, String comment) {
                 p[0] = period;
             }
 
             @Override
-            public void endPeriod(SellingPeriod period) {
+            public void endPeriod(SellingPeriod period, String comment) {
                 c[0] = period.closeCash;
                 c[1] = period.closeCreditCardAmount;
             }
 
             @Override
-            public void modifyCash(int cash, int creditCardAmount) {
+            public void modifyCash(String username, int cash, int creditCardAmount) {
                 c[0] = cash;
                 c[1] = creditCardAmount;
             }
@@ -581,7 +581,7 @@ public class SellingTab implements OperationListener {
 
     public static void closePeriod(Main main, SellingPeriod sellingPeriod, Message closeComment) {
         sellingPeriod.endTime = closeComment != null ? closeComment.timestamp : Instant.now();
-        main.salesIO.endPeriod(sellingPeriod, closeComment);
+        main.salesIO.endPeriod(sellingPeriod, closeComment == null ? null : closeComment.text);
 
         Map<String, Integer> purchasedProducts = new HashMap<>();
         for (Sale sale : sellingPeriod.sales) {

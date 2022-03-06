@@ -5,6 +5,7 @@ import arunyilvantarto.OperationListener;
 import arunyilvantarto.domain.Article;
 import arunyilvantarto.domain.User;
 import arunyilvantarto.operations.AdminOperation;
+import arunyilvantarto.operations.RenameUserOp;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -26,6 +27,8 @@ public class AdminPage implements OperationListener {
     private UsersTab users;
     private RevenueTab revenue;
     private MessagesTab messages;
+
+    private Label logonLabel;
 
     public AdminPage(Main main) {
         this.main = main;
@@ -85,16 +88,27 @@ public class AdminPage implements OperationListener {
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
+        logonLabel = new Label();
+        initLogonLabel();
+
         return new MigPane("fill, wrap 1, gap 0, ins 0", null, "[][grow]").
-                add(new ToolBar(beginSellingButton, spacer,  new Label("Bejelentkezve "+main.logonUser.name+"-ként"), logoutButton), "grow").
+                add(new ToolBar(beginSellingButton, spacer, logonLabel, logoutButton), "grow").
                 add(tabPane, "grow");
+    }
+
+    private void initLogonLabel() {
+        logonLabel.setText("Bejelentkezve " + main.logonUser.name + "-ként");
     }
 
     @Override
     public void onEvent(AdminOperation op) {
+        if (op instanceof RenameUserOp)
+            initLogonLabel();
+
         articles.onEvent(op);
         addItem.onEvent(op);
         users.onEvent(op);
+        revenue.onEvent(op);
     }
 
     public void showArticle(Article article) {

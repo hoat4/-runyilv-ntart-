@@ -1,6 +1,6 @@
 {
   "users" : [ {
-    "name" : "u",
+    "name" : "u5",
     "role" : "ROOT",
     "passwordHash" : "obGYKw8+PnQcilppY7LuB7KGqhB3PYmeue7d6oZYLlg=",
     "staffBill" : 128
@@ -36,7 +36,7 @@
     "barCode" : null,
     "sellingPrice" : 0,
     "items" : [ ],
-    "stockQuantity" : -2
+    "stockQuantity" : -3
   }, {
     "timestamp" : 1625861928.879748000,
     "name" : "b",
@@ -67,7 +67,7 @@
     "stockQuantity" : -2
   } ],
   "messages" : [ {
-    "sender" : "u",
+    "sender" : "u5",
     "timestamp" : 1646581738.644869700,
     "text" : "asdf",
     "subject" : {
@@ -75,7 +75,7 @@
       "periodID" : 107
     }
   }, {
-    "sender" : "u",
+    "sender" : "u5",
     "timestamp" : 1646581777.535984200,
     "text" : "asdf",
     "subject" : {
@@ -83,7 +83,7 @@
       "periodID" : 108
     }
   }, {
-    "sender" : "u",
+    "sender" : "u5",
     "timestamp" : 1646581783.244774400,
     "text" : "fdsa",
     "subject" : {
@@ -91,7 +91,7 @@
       "periodID" : 108
     }
   }, {
-    "sender" : "u",
+    "sender" : "u5",
     "timestamp" : 1646582875.947650700,
     "text" : "asdf",
     "subject" : {

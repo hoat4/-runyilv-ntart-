@@ -9,13 +9,13 @@ import arunyilvantarto.domain.User.Role;
 import arunyilvantarto.operations.AdminOperation;
 import arunyilvantarto.operations.ChangePasswordOp;
 import arunyilvantarto.operations.ChangeRoleOp;
+import arunyilvantarto.operations.RenameUserOp;
 import javafx.beans.binding.Bindings;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import org.tbee.javafx.scene.layout.MigPane;
 
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,6 +32,7 @@ public class UserView {
     private TableView<Sale> staffBillTable;
     private TabPane tabPane;
     private Tab staffBillTab;
+    private Button userNameButton;
 
     public UserView(Main app, User user) {
         this.app = app;
@@ -69,6 +70,9 @@ public class UserView {
 
         if (op instanceof ChangeRoleOp && ((ChangeRoleOp) op).username.equals(user.name))
             roleComboBox.getSelectionModel().select(((ChangeRoleOp) op).newRole);
+
+        if (op instanceof RenameUserOp && ((RenameUserOp) op).newName.equals(user.name))
+            userNameButton.setText(user.name);
     }
 
     private Node settings() {
@@ -118,9 +122,23 @@ public class UserView {
 
         changePasswordButton.visibleProperty().bind(Bindings.notEqual(roleComboBox.valueProperty(), Role.STAFF));
 
+         userNameButton = new Button(user.name);
+        userNameButton.setOnAction(evt -> {
+            TextInputDialog d = new TextInputDialog();
+            d.setTitle("Új név");
+            d.setHeaderText("Felhasználó átnevezése");
+            d.setContentText(user.name + " új neve: ");
+            d.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(Bindings.createBooleanBinding(() ->
+                    d.getEditor().getText().isEmpty() || d.getEditor().getText().equals(user.name), d.getEditor().textProperty()));
+
+            d.showAndWait().ifPresent(newName -> {
+                app.executeOperation(new RenameUserOp(user.name, newName));
+            });
+        });
+
         return new MigPane("align center center, hidemode 3").
                 add(new Label("Név: ")).
-                add(new Label(user.name), "wrap").
+                add(userNameButton, "wrap").
                 add(new Label("Típus: ")).
                 add(roleComboBox, "grow, wrap").
                 add(changePasswordButton, "grow, span 2, wrap");
@@ -129,7 +147,7 @@ public class UserView {
 
     private Node staffBill() {
         return staffBillTable = new UIUtil.TableBuilder<Sale>(List.of()).
-                col("Dátum", 100, UNLIMITED_WIDTH, sale->sale.timestamp.atZone(ZoneId.systemDefault()).format(UIUtil.DATETIME_FORMAT)).
+                col("Dátum", 100, UNLIMITED_WIDTH, sale -> sale.timestamp.atZone(ZoneId.systemDefault()).format(UIUtil.DATETIME_FORMAT)).
                 col("Termék", 170, UNLIMITED_WIDTH, sale -> sale.article == null ? "" : sale.article.name).
                 col("Ár", 50, UNLIMITED_WIDTH, sale -> sale.pricePerProduct).
                 col("Mennyiség", 80, UNLIMITED_WIDTH, sale -> sale.quantity).

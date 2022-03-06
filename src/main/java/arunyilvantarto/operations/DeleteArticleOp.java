@@ -1,5 +1,6 @@
 package arunyilvantarto.operations;
 
+import arunyilvantarto.Main;
 import arunyilvantarto.domain.Article;
 import arunyilvantarto.domain.DataRoot;
 
@@ -12,13 +13,13 @@ public class DeleteArticleOp implements AdminOperation {
     }
 
     @Override
-    public void execute(DataRoot data) {
+    public void execute(DataRoot data, Main main) {
         if (!data.articles.removeIf(a -> a.name.equals(article.name)))
             throw new RuntimeException("no such article: " + article.name);
     }
 
     @Override
-    public void undo(DataRoot data) {
+    public void undo(DataRoot data, Main main) {
         data.articles.add(article);
     }
 

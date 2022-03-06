@@ -1,7 +1,6 @@
 package arunyilvantarto;
 
 import arunyilvantarto.domain.DataRoot;
-import arunyilvantarto.domain.Message;
 import arunyilvantarto.domain.Sale;
 import arunyilvantarto.domain.SellingPeriod;
 
@@ -17,7 +16,7 @@ import java.util.ArrayList;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class SalesIO {
+public class SalesIO implements AutoCloseable{
 
     private static final int MIN_COLS = 6;
     private static final int MAX_COLS = 9;
@@ -40,14 +39,13 @@ public class SalesIO {
         writeImpl("Időpont\tTermék\tMennyiség\tTermékenkénti ár\tEladó\tPeriódusazonosító vagy személynév\tBankkártya összeg\tVásárlásazonosító\n");
     }
 
-    public synchronized void beginPeriod(SellingPeriod period, Message message) {
+    public synchronized void beginPeriod(SellingPeriod period, String comment) {
         if (period.username.isEmpty())
             throw new IllegalArgumentException("empty seller name");
 
         LocalDateTime timestamp = LocalDateTime.ofInstant(period.beginTime, ZoneId.systemDefault());
         writeImpl(timestamp, PERIOD_OPEN_PRODUCT_NAME, 1, -period.openCash, period.username,
-                new Sale.PeriodBillID(period.id), period.openCreditCardAmount, 0,
-                message == null ? null : message.text);
+                new Sale.PeriodBillID(period.id), period.openCreditCardAmount, 0, comment);
     }
 
     public synchronized void sale(Sale sale) {
@@ -59,14 +57,13 @@ public class SalesIO {
                 sale.quantity, sale.pricePerProduct, sale.seller, sale.billID, -1, sale.paymentID, null);
     }
 
-    public synchronized void endPeriod(SellingPeriod period, Message message) {
+    public synchronized void endPeriod(SellingPeriod period, String comment) {
         if (period.username.isEmpty())
             throw new IllegalArgumentException("empty seller name");
 
         LocalDateTime timestamp = LocalDateTime.ofInstant(period.endTime, ZoneId.systemDefault());
         writeImpl(timestamp, PERIOD_CLOSE_PRODUCT_NAME, 1, period.closeCash, period.username,
-                new Sale.PeriodBillID(period.id), period.closeCreditCardAmount, 0,
-                message == null ? null : message.text);
+                new Sale.PeriodBillID(period.id), period.closeCreditCardAmount, 0, comment);
     }
 
     public synchronized void modifyCash(String username, int cash, int creditCardAmount) {
@@ -127,6 +124,7 @@ public class SalesIO {
         Sale.BillID billID = Sale.BillID.parse(row[5]);
         int creditCardAmount = row[6] == null || row[6].equals("-") ? 0 : Integer.parseInt(row[6]);
         int purchaseID = row[7] == null || row[7].equals("-") ? 0 : Integer.parseInt(row[7]);
+        String comment = row[8] == null || row[8].isEmpty() ? null : row[8];
 
         switch (productName) {
             case PERIOD_OPEN_PRODUCT_NAME:
@@ -138,7 +136,7 @@ public class SalesIO {
                 p.sales = new ArrayList<>();
                 p.openCreditCardAmount = creditCardAmount;
                 currentReadPeriod = p;
-                visitor.beginPeriod(p);
+                visitor.beginPeriod(p, comment);
                 break;
             case PERIOD_CLOSE_PRODUCT_NAME:
                 if (currentReadPeriod.id != ((Sale.PeriodBillID) billID).periodID)
@@ -149,11 +147,11 @@ public class SalesIO {
                 p.closeCash = pricePerProduct;
                 p.closeCreditCardAmount = creditCardAmount;
                 p.endTime = timestamp;
-                visitor.endPeriod(p);
+                visitor.endPeriod(p, comment);
                 currentReadPeriod = null;
                 break;
             case MODIFY_CASH_PRODUCT_NAME:
-                visitor.modifyCash(pricePerProduct, creditCardAmount);
+                visitor.modifyCash(seller, pricePerProduct, creditCardAmount);
                 break;
             default:
                 Sale sale = new Sale();
@@ -188,4 +186,7 @@ public class SalesIO {
         }
     }
 
+    public void close() throws IOException {
+        channel.close();
+    }
 }

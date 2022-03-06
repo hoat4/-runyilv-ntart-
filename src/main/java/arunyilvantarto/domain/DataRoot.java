@@ -1,7 +1,5 @@
 package arunyilvantarto.domain;
 
-import com.fasterxml.jackson.databind.deser.std.CollectionDeserializer;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

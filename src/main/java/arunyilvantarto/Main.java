@@ -24,16 +24,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import static java.nio.file.StandardOpenOption.*;
 
 public class Main extends Application {
 
+    public static final String SALES_TSV_NAME = "sales.tsv";
     public volatile DataRoot dataRoot;
     public SellingPeriod currentSellingPeriod;
     private OperationListener rootListener;
@@ -77,13 +76,17 @@ public class Main extends Application {
     public void init() throws Exception {
         dataRoot = JSON_MAPPER.readValue(Files.readAllBytes(Path.of("data.json")), DataRoot.class);
 
-        final Path tsvPath = Path.of("sales.tsv");
+        final Path tsvPath = salesTsvPath();
         if (Files.isRegularFile(tsvPath))
             salesIO = new SalesIO(dataRoot, FileChannel.open(tsvPath, READ, WRITE));
         else {
             salesIO = new SalesIO(dataRoot, FileChannel.open(tsvPath, READ, WRITE, CREATE_NEW));
             salesIO.begin();
         }
+    }
+
+    public Path salesTsvPath() {
+        return Path.of(SALES_TSV_NAME);
     }
 
     @Override
@@ -171,7 +174,7 @@ public class Main extends Application {
             throw new RuntimeException(e);
         }
 
-        op.execute(dataRoot);
+        op.execute(dataRoot, this);
 
         if (rootListener != null)
             rootListener.onEvent(op);
