@@ -25,6 +25,7 @@ public class AdminPage implements OperationListener {
     private AddItemTab addItem;
     private UsersTab users;
     private RevenueTab revenue;
+    private MessagesTab messages;
 
     public AdminPage(Main main) {
         this.main = main;
@@ -64,6 +65,10 @@ public class AdminPage implements OperationListener {
         Tab revenueTab = new Tab("Forgalom", (this.revenue = new RevenueTab(this)).build());
         revenueTab.setClosable(false);
         tabPane.getTabs().add(revenueTab);
+
+        //Tab messagesTab = new Tab("Üzenetek", (this.messages = new MessagesTab(this)).build());
+        //messagesTab.setClosable(false);
+        //tabPane.getTabs().add(messagesTab);
 
         Button beginSellingButton = new Button("Kassza nyitása");
         beginSellingButton.setOnAction(evt -> {

@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -103,7 +104,6 @@ public class Main extends Application {
 
         LoginForm loginForm = new LoginForm(this);
         Region root = loginForm.buildLayout();
-
         this.scene = new Scene(root);
         scene.getStylesheets().add("/arunyilvantarto/app.css");
         primaryStage.setOnCloseRequest(evt -> {
@@ -118,6 +118,11 @@ public class Main extends Application {
         primaryStage.setOnHidden(e -> {
             executor.shutdown();
         });
+
+        if (false) {
+            logonUser = dataRoot.user("u");
+            loginForm.loadAndShowNextPage();
+        }
     }
 
     private static DataRoot makeSampleData() {

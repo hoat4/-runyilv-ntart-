@@ -3,6 +3,7 @@ package arunyilvantarto.ui;
 import arunyilvantarto.Main;
 import arunyilvantarto.OperationListener;
 import arunyilvantarto.SalesVisitor;
+import arunyilvantarto.domain.Message;
 import arunyilvantarto.domain.Sale;
 import arunyilvantarto.domain.SellingPeriod;
 import arunyilvantarto.operations.AdminOperation;
@@ -11,10 +12,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.TextFlow;
+import javafx.scene.layout.Region;
 import org.tbee.javafx.scene.layout.MigPane;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -30,6 +31,9 @@ public class RevenueTab implements OperationListener {
 
     private int cash, creditCardAmount;
     private Button cashButton, creditCardAmountButton;
+
+    private PeriodCommentPanel periodOpenCommentPanel = new PeriodCommentPanel("Nyitási megjegyzés");
+    private PeriodCommentPanel periodCloseCommentPanel = new PeriodCommentPanel("Zárási megjegyzés");
 
     public RevenueTab(AdminPage adminPage) {
         this.adminPage = adminPage;
@@ -75,8 +79,12 @@ public class RevenueTab implements OperationListener {
         });
 
         periodTable = new UIUtil.TableBuilder<>(periods).
-                col("Nyitás", 120, 180, p -> UIUtil.toDateString(p.beginTime)).
-                col("Zárás", 120, 180, p -> p.endTime == null ? "" : UIUtil.toDateString(p.endTime)).
+                col("Nyitás", 120, 180, p -> {
+                    return dateWithCommentWarning(p.beginTime, new Message.OpenPeriodSubject(p.id));
+                }).
+                customCol("Zárás", 130, 180, p -> {
+                    return dateWithCommentWarning(p.endTime, new Message.ClosePeriodSubject(p.id));
+                }).
                 col("Eladó", 120, 170, p -> p.username).
                 customCol("Nyitó kp.", 100, 90, p -> {
                     Label lbl = new Label(p.openCash + " Ft");
@@ -120,6 +128,14 @@ public class RevenueTab implements OperationListener {
             else {
                 salesInPeriodTable.setVisible(true);
                 salesInPeriodTable.getItems().setAll(value.sales);
+
+                periodOpenCommentPanel.setContent(main.dataRoot.messages.stream().
+                        filter(m -> m.subject.equals(new Message.OpenPeriodSubject(value.id))).
+                        findAny().orElse(null));
+
+                periodCloseCommentPanel.setContent(main.dataRoot.messages.stream().
+                        filter(m -> m.subject.equals(new Message.ClosePeriodSubject(value.id))).
+                        findAny().orElse(null));
             }
         });
 
@@ -156,12 +172,28 @@ public class RevenueTab implements OperationListener {
         TitledPane cashPane = new TitledPane("Kassza", cashPanel);
         cashPane.setCollapsible(false);
 
-        MigPane p = new MigPane("fill, hidemode 2", "[grow 1][grow 2]", "[][grow]").
-                add(periodTable, "spany 2, grow").
-                add(cashPane, "wrap, grow").
+        MigPane p = new MigPane("fill, hidemode 2, wrap 2", "[grow 1][grow 2]", "[][shrink][shrink][grow]").
+                add(periodTable, "spany 4, grow").
+                add(cashPane, "grow").
+                add(periodOpenCommentPanel.titledPane, "grow").
+                add(periodCloseCommentPanel.titledPane, "grow").
                 add(salesInPeriodTable, "grow");
         p.getStyleClass().add("revenue-tab");
         return p;
+    }
+
+    private Region dateWithCommentWarning(Instant time, Message.Subject messageSubject) {
+        Message msg = main.dataRoot.messages.stream().
+                filter(m -> m.subject.equals(messageSubject)).
+                findAny().orElse(null);
+        Label dateLabel = new Label(time == null ? "" : UIUtil.toDateString(time));
+        if (msg == null)
+            return dateLabel;
+        Label label = new Label("!");
+        label.getStyleClass().add("salesperiod-closecomment-warning");
+        HBox hbox = new HBox(dateLabel, label);
+        hbox.setSpacing(5);
+        return hbox;
     }
 
     private void modifyCash(String displayName, Consumer<Integer> setter, Button button) {
@@ -179,4 +211,35 @@ public class RevenueTab implements OperationListener {
         });
     }
 
+
+    private static class PeriodCommentPanel {
+
+        private TextArea textArea;
+        public TitledPane titledPane;
+        private final String titlePrefix;
+
+        public PeriodCommentPanel(String titlePrefix) {
+            this.titlePrefix = titlePrefix;
+            textArea = new TextArea();
+            textArea.setEditable(false);
+            textArea.setFocusTraversable(false);
+            textArea.getStyleClass().add("revenuetab-periodclosecomment-textarea");
+            textArea.setPrefColumnCount(15);
+            textArea.setPrefRowCount(4);
+            titledPane = new TitledPane();
+            titledPane.setContent(textArea);
+            titledPane.setCollapsible(false);
+            titledPane.setVisible(false);
+        }
+
+        public void setContent(Message message) {
+            titledPane.setVisible(message != null);
+            if (message != null) {
+                titledPane.setText(titlePrefix+" " + message.sender.name + " által");
+                textArea.setText(message.text);
+            } else {
+                textArea.setText("");
+            }
+        }
+    }
 }

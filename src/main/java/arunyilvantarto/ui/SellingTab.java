@@ -4,12 +4,10 @@ import arunyilvantarto.Main;
 import arunyilvantarto.OperationListener;
 import arunyilvantarto.SalesIO;
 import arunyilvantarto.SalesVisitor;
-import arunyilvantarto.domain.Article;
-import arunyilvantarto.domain.Sale;
-import arunyilvantarto.domain.SellingPeriod;
-import arunyilvantarto.domain.User;
+import arunyilvantarto.domain.*;
 import arunyilvantarto.operations.AdminOperation;
 import arunyilvantarto.operations.ClosePeriodOp;
+import arunyilvantarto.operations.SendMessageOp;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -20,7 +18,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
@@ -65,35 +62,37 @@ public class SellingTab implements OperationListener {
             if (preloadDoneCallback != null)
                 preloadDoneCallback.run();
 
-            SellingPeriodAndCash lastSellingPeriodAndCash = lastSellingPeriod(app.salesIO);
-            SellingPeriod lastSellingPeriod = lastSellingPeriodAndCash.sellingPeriod;
+            SellingPeriodAndCash cashState = lastSellingPeriod(app.salesIO);
+            SellingPeriod lastSellingPeriod = cashState.lastSellingPeriod;
             if (lastSellingPeriod != null && lastSellingPeriod.endTime == null)
                 throw new IllegalStateException("nem volt lezárva");
 
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("Nyitás");
-            dialog.setContentText("Kasszában lévő váltópénz: ");
-            if (lastSellingPeriod != null)
-                dialog.getEditor().setText(Integer.toString(lastSellingPeriodAndCash.cash));
-            dialog.showAndWait().ifPresentOrElse(s -> {
-                SellingPeriod sellingPeriod = new SellingPeriod();
-                sellingPeriod.id = lastSellingPeriod == null ? 1 : lastSellingPeriod.id + 1;
-                sellingPeriod.username = app.logonUser.name;
-                sellingPeriod.beginTime = Instant.now();
-                sellingPeriod.openCash = Integer.parseInt(s);
-                sellingPeriod.sales = new ArrayList<>();
-                sellingPeriod.openCreditCardAmount = lastSellingPeriodAndCash.creditCardAmount;
-                app.currentSellingPeriod = sellingPeriod;
-
-                app.salesIO.beginPeriod(sellingPeriod);
-
-                sellingTab.sellingPeriod = sellingPeriod;
-                sellingTab.paymentIDCounter = lastSellingPeriodAndCash.lastPaymentID + 1;
-                app.switchPage(scene, sellingTab);
-            }, () -> {
+            MoneyConfirmationResult confirmationResult = confirmMoneyInCash(sellingTab.main, cashState.cash);
+            if (!confirmationResult.canContinue) {
                 if (cancelCallback != null)
                     cancelCallback.run();
-            });
+                return;
+            }
+
+            SellingPeriod sellingPeriod = new SellingPeriod();
+            sellingPeriod.id = lastSellingPeriod == null ? 1 : lastSellingPeriod.id + 1;
+            sellingPeriod.username = app.logonUser.name;
+            sellingPeriod.beginTime = Instant.now();
+            sellingPeriod.openCash = cashState.cash;
+            sellingPeriod.sales = new ArrayList<>();
+            sellingPeriod.openCreditCardAmount = cashState.creditCardAmount;
+            app.currentSellingPeriod = sellingPeriod;
+
+            if (confirmationResult.message != null) {
+                confirmationResult.message.subject = new Message.OpenPeriodSubject(sellingPeriod.id);
+                app.executeOperation(new SendMessageOp(confirmationResult.message));
+            }
+
+            app.salesIO.beginPeriod(sellingPeriod, confirmationResult.message);
+
+            sellingTab.sellingPeriod = sellingPeriod;
+            sellingTab.paymentIDCounter = cashState.lastPaymentID + 1;
+            app.switchPage(scene, sellingTab);
         });
     }
 
@@ -128,12 +127,12 @@ public class SellingTab implements OperationListener {
     }
 
     public static class SellingPeriodAndCash {
-        public final SellingPeriod sellingPeriod;
+        public final SellingPeriod lastSellingPeriod;
         public final int cash, creditCardAmount;
         public final int lastPaymentID;
 
-        public SellingPeriodAndCash(SellingPeriod sellingPeriod, int cash, int creditCardAmount, int lastPaymentID) {
-            this.sellingPeriod = sellingPeriod;
+        public SellingPeriodAndCash(SellingPeriod lastSellingPeriod, int cash, int creditCardAmount, int lastPaymentID) {
+            this.lastSellingPeriod = lastSellingPeriod;
             this.cash = cash;
             this.creditCardAmount = creditCardAmount;
             this.lastPaymentID = lastPaymentID;
@@ -226,7 +225,7 @@ public class SellingTab implements OperationListener {
                 Platform.runLater(() -> barcodeField.setText(""));
             });
         });
-        barcodeField.setOnKeyPressed(e->{
+        barcodeField.setOnKeyPressed(e -> {
             if (e.getCode() == SPACE) {
                 e.consume();
 
@@ -534,26 +533,55 @@ public class SellingTab implements OperationListener {
         int creditCardRevenue = Integer.parseInt(o.get());
         sellingPeriod.closeCreditCardAmount = sellingPeriod.openCreditCardAmount + creditCardRevenue;
 
+        int remainingCash = sellingPeriod.remainingCash(creditCardRevenue);
+        MoneyConfirmationResult result = confirmMoneyInCash(main, remainingCash);
+        if (!result.canContinue)
+            return false;
 
-        TextInputDialog d2 = new TextInputDialog();
-        d2.setTitle("Zárás");
-        d2.setHeaderText(sellingPeriod.remainingCash(creditCardRevenue) + " Ft maradt elvileg a kasszában. ");
-        d2.setContentText("Kasszában hagyott váltópénz: ");
-        d2.getDialogPane().getButtonTypes().remove(ButtonType.CANCEL);
-        d2.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(
-                createBooleanBinding(() -> !d2.getEditor().getText().matches("[0-9]+"), d2.getEditor().textProperty()));
-
-        o = d2.showAndWait();
-        o.ifPresent(s -> {
-            sellingPeriod.closeCash = Integer.parseInt(s);
-            closePeriod(main, sellingPeriod);
-        });
-        return o.isPresent();
+        sellingPeriod.closeCash = remainingCash;
+        if (result.message != null)
+            result.message.subject = new Message.ClosePeriodSubject(sellingPeriod.id);
+        closePeriod(main, sellingPeriod, result.message);
+        return true;
     }
 
-    public static void closePeriod(Main main, SellingPeriod sellingPeriod) {
-        sellingPeriod.endTime = Instant.now();
-        main.salesIO.endPeriod(sellingPeriod);
+    public static MoneyConfirmationResult confirmMoneyInCash(Main main, int remainingCash) {
+        while (true) {
+            Alert d2 = new Alert(Alert.AlertType.CONFIRMATION);
+            d2.setTitle("Zárás");
+            d2.setHeaderText(remainingCash + " Ft maradt elvileg a kasszában. ");
+            d2.setContentText("Rendben van a váltópénz?");
+            d2.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
+            ButtonType pressedButton = d2.showAndWait().orElse(null);
+            if (pressedButton == null || pressedButton == ButtonType.CANCEL)
+                return new MoneyConfirmationResult(false, null);
+
+            Message msg = null;
+            if (pressedButton == ButtonType.NO) {
+                String desc = "Írd le, hogy mit tapasztaltál a kasszában lévő váltópénzzel kapcsolatban. ";
+                msg = MessagingUI.showSendMessageDialog(main, desc).orElse(null);
+                if (msg == null)
+                    continue;
+            }
+
+            return new MoneyConfirmationResult(true, msg);
+        }
+    }
+
+    public static class MoneyConfirmationResult {
+
+        public final boolean canContinue;
+        public final Message message;
+
+        public MoneyConfirmationResult(boolean canContinue, Message message) {
+            this.canContinue = canContinue;
+            this.message = message;
+        }
+    }
+
+    public static void closePeriod(Main main, SellingPeriod sellingPeriod, Message closeComment) {
+        sellingPeriod.endTime = closeComment != null ? closeComment.timestamp : Instant.now();
+        main.salesIO.endPeriod(sellingPeriod, closeComment);
 
         Map<String, Integer> purchasedProducts = new HashMap<>();
         for (Sale sale : sellingPeriod.sales) {
@@ -569,6 +597,6 @@ public class SellingTab implements OperationListener {
             }
         }
 
-        main.executeOperation(new ClosePeriodOp(sellingPeriod, purchasedProducts, staffBillGrowths));
+        main.executeOperation(new ClosePeriodOp(sellingPeriod, purchasedProducts, staffBillGrowths, closeComment));
     }
 }

@@ -36,7 +36,7 @@
     "barCode" : null,
     "sellingPrice" : 0,
     "items" : [ ],
-    "stockQuantity" : 0
+    "stockQuantity" : -2
   }, {
     "timestamp" : 1625861928.879748000,
     "name" : "b",
@@ -57,7 +57,7 @@
     "barCode" : "30456789",
     "sellingPrice" : 100,
     "items" : [ ],
-    "stockQuantity" : -3
+    "stockQuantity" : -5
   }, {
     "timestamp" : 1627469673.524480600,
     "name" : "e",
@@ -65,5 +65,38 @@
     "sellingPrice" : 101,
     "items" : [ ],
     "stockQuantity" : -2
+  } ],
+  "messages" : [ {
+    "sender" : "u",
+    "timestamp" : 1646581738.644869700,
+    "text" : "asdf",
+    "subject" : {
+      "type" : "ClosePeriod",
+      "periodID" : 107
+    }
+  }, {
+    "sender" : "u",
+    "timestamp" : 1646581777.535984200,
+    "text" : "asdf",
+    "subject" : {
+      "type" : "OpenPeriod",
+      "periodID" : 108
+    }
+  }, {
+    "sender" : "u",
+    "timestamp" : 1646581783.244774400,
+    "text" : "fdsa",
+    "subject" : {
+      "type" : "ClosePeriod",
+      "periodID" : 108
+    }
+  }, {
+    "sender" : "u",
+    "timestamp" : 1646582875.947650700,
+    "text" : "asdf",
+    "subject" : {
+      "type" : "OpenPeriod",
+      "periodID" : 109
+    }
   } ]
 }

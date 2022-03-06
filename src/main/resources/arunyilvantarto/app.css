@@ -12,3 +12,21 @@
 .revenue-tab .table-view .table-row-cell { -fx-font-size: .8em }
 .cash-mismatch-cell { -fx-text-fill: #c00; }
 .expected-cash-label { -fx-font-size: .8em; -fx-text-fill: #777; }
+
+.salesperiod-closecomment-warning {
+    -fx-background-color: #e55;
+    -fx-background-radius: 5;
+    -fx-text-fill: white;
+    -fx-padding: 0 5 0 5;
+    -fx-font-weight: bold;
+}
+
+.revenuetab-periodclosecomment-textarea:focused .content {
+    /* ne legyen fura kék széle fókuszáláskor. azért ronda, mert mivel TitledPane-be rakjuk, és nincs hely körülötte
+       keretnek/árnyéknak. */
+
+    -fx-background-color:
+        linear-gradient(from 0px 0px to 0px 4px, derive(-fx-control-inner-background, -8%), -fx-control-inner-background);
+    -fx-background-radius: 2;
+    -fx-background-insets: 0, 0, 0;
+}

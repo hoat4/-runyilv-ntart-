@@ -3,32 +3,21 @@ package arunyilvantarto.ui;
 import arunyilvantarto.Main;
 import arunyilvantarto.Security;
 import arunyilvantarto.domain.DataRoot;
+import arunyilvantarto.domain.Message;
 import arunyilvantarto.domain.SellingPeriod;
 import arunyilvantarto.domain.User;
-import com.sun.javafx.scene.NodeHelper;
-import com.sun.javafx.scene.SceneHelper;
-import javafx.animation.FadeTransition;
-import javafx.animation.Transition;
 import javafx.application.Platform;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
-import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
-import javafx.util.Duration;
 import org.tbee.javafx.scene.layout.MigPane;
 
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 
-import static arunyilvantarto.domain.User.Role.ADMIN;
-import static arunyilvantarto.domain.User.Role.ROOT;
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 public class LoginForm {
@@ -130,7 +119,7 @@ public class LoginForm {
 
 
         app.executor.execute(() -> {
-            SellingPeriod p = SellingTab.lastSellingPeriod(app.salesIO).sellingPeriod;
+            SellingPeriod p = SellingTab.lastSellingPeriod(app.salesIO).lastSellingPeriod;
             if (p != null && p.endTime == null) {
                 Platform.runLater(() -> {
                     progressIndicator.setVisible(false);
@@ -144,31 +133,29 @@ public class LoginForm {
                             createBooleanBinding(() -> !d1.getEditor().getText().matches("[0-9]+"), d1.getEditor().textProperty()));
 
                     Optional<String> o2 = d1.showAndWait();
-                    if  (o2.isEmpty()) {
+                    if (o2.isEmpty()) {
                         loginForm.setOpacity(1);
                         app.logonUser = null;
                         return;
                     }
                     int creditCardRevenue = Integer.parseInt(o2.get());
 
-                    TextInputDialog d = new TextInputDialog();
-                    d.setTitle("Zárás");
-                    d.setHeaderText(p.remainingCash(creditCardRevenue) + " Ft maradt elvileg a kasszában. ");
-                    d.setContentText("Kasszában hagyott váltópénz: ");
-                    d.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(
-                            createBooleanBinding(() -> !d.getEditor().getText().matches("[0-9]+"), d.getEditor().textProperty()));
-
-                    d.showAndWait().ifPresentOrElse(s -> {
-                        progressIndicator.setVisible(true);
-
-                        p.closeCash = Integer.parseInt(s);
-                        p.closeCreditCardAmount = p.openCreditCardAmount + creditCardRevenue;
-                        app.executor.execute(() -> SellingTab.closePeriod(app, p));
-                        app.executor.execute(this::loadAndShowNextPage);
-                    }, () -> {
+                    int remainingCash = p.remainingCash(creditCardRevenue);
+                    SellingTab.MoneyConfirmationResult result = SellingTab.confirmMoneyInCash(app, remainingCash);
+                    if (!result.canContinue) {
                         loginForm.setOpacity(1);
                         app.logonUser = null;
-                    });
+                        return;
+                    }
+
+                    progressIndicator.setVisible(true);
+
+                    p.closeCash = remainingCash;
+                    p.closeCreditCardAmount = p.openCreditCardAmount + creditCardRevenue;
+                    if (result.message != null)
+                        result.message.subject = new Message.ClosePeriodSubject(p.id);
+                    app.executor.execute(() -> SellingTab.closePeriod(app, p, result.message));
+                    app.executor.execute(this::loadAndShowNextPage);
                 });
             } else
                 loadAndShowNextPage();
@@ -176,7 +163,7 @@ public class LoginForm {
     }
 
 
-    private void loadAndShowNextPage() {
+    public void loadAndShowNextPage() {
         long begin = System.nanoTime();
         switch (app.logonUser.role) {
             case ADMIN:
