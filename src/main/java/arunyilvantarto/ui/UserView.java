@@ -122,18 +122,17 @@ public class UserView {
 
         changePasswordButton.visibleProperty().bind(Bindings.notEqual(roleComboBox.valueProperty(), Role.STAFF));
 
-         userNameButton = new Button(user.name);
+        userNameButton = new Button(user.name);
         userNameButton.setOnAction(evt -> {
             TextInputDialog d = new TextInputDialog();
             d.setTitle("Új név");
             d.setHeaderText("Felhasználó átnevezése");
             d.setContentText(user.name + " új neve: ");
             d.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(Bindings.createBooleanBinding(() ->
-                    d.getEditor().getText().isEmpty() || d.getEditor().getText().equals(user.name), d.getEditor().textProperty()));
+                    d.getEditor().getText().isEmpty() || d.getEditor().getText().equals(user.name)
+                    || app.dataRoot.users.stream().anyMatch(u->u.name.equals(d.getEditor().getText())), d.getEditor().textProperty()));
 
-            d.showAndWait().ifPresent(newName -> {
-                app.executeOperation(new RenameUserOp(user.name, newName));
-            });
+            d.showAndWait().ifPresent(newName -> app.executeOperation(new RenameUserOp(user.name, newName)));
         });
 
         return new MigPane("align center center, hidemode 3").

@@ -12,6 +12,8 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import org.tbee.javafx.scene.layout.MigPane;
 
+import static javafx.beans.binding.Bindings.createBooleanBinding;
+
 public class UsersTab {
 
     private final Main app;
@@ -36,7 +38,7 @@ public class UsersTab {
 
     public void onEvent(AdminOperation op) {
         if (op instanceof AddUserOp)
-            usersTable.getItems().add(((AddUserOp)op).user);
+            usersTable.getItems().add(((AddUserOp) op).user);
         if (op instanceof ChangeRoleOp || op instanceof RenameUserOp)
             usersTable.refresh();
         if (userView != null)
@@ -50,6 +52,10 @@ public class UsersTab {
             dialog.setTitle("Új felhasználó");
             dialog.setHeaderText("Felhasználó hozzáadása");
             dialog.setContentText("Név: ");
+            dialog.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(createBooleanBinding(() -> {
+                String n = dialog.getEditor().getText();
+                return n.isBlank() || data.users.stream().anyMatch(u -> u.name.equals(n));
+            }, dialog.getEditor().textProperty()));
             dialog.showAndWait().ifPresent(s -> {
                 User user = new User();
                 user.name = s;

@@ -31,6 +31,8 @@ public class RenameUserOp implements AdminOperation {
 
     @Override
     public void execute(DataRoot data, Main main) {
+        if (data.users.stream().anyMatch(u -> u.name.equals(newName)))
+            throw new RuntimeException("user '" + newName + "' already exists (tried to rename user '" + oldName + "')");
         data.user(oldName).name = newName;
         doRename(data, main, oldName, newName);
     }

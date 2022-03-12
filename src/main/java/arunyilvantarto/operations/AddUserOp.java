@@ -13,6 +13,8 @@ public class AddUserOp implements AdminOperation {
 
     @Override
     public void execute(DataRoot data, Main main) {
+        if (data.users.stream().anyMatch(u -> u.name.equals(user.name)))
+            throw new RuntimeException("user '" + user.name + "' already exists (tried to rename user '" + user.name + "')");
         data.users.add(user);
     }
 
