@@ -155,6 +155,7 @@ public class UserView {
                 col("Termék", 170, UNLIMITED_WIDTH, sale -> sale.article == null ? "" : sale.article.name).
                 col("Ár", 50, UNLIMITED_WIDTH, sale -> sale.pricePerProduct).
                 col("Mennyiség", 80, UNLIMITED_WIDTH, sale -> sale.quantity).
+                col("Eladó", 80, UNLIMITED_WIDTH, sale -> sale.seller).
                 col("Összeg", 80, UNLIMITED_WIDTH, sale -> sale.pricePerProduct * sale.quantity).
                 placeholder("Nincs a személyzeti számlán még egy termék sem").
                 build();
