@@ -1,34 +1,76 @@
 {
   "users" : [ {
-    "name" : "u5",
+    "name" : "u",
     "role" : "ROOT",
     "passwordHash" : "obGYKw8+PnQcilppY7LuB7KGqhB3PYmeue7d6oZYLlg=",
-    "staffBill" : 128
+    "staffBill" : 229,
+    "deleted" : false
   }, {
     "name" : "a",
     "role" : "STAFF",
     "passwordHash" : "9b5ECwOqVL8CITg44NW+CuhJRFYYVzAUmtVfH8vRj88=",
-    "staffBill" : 108
+    "staffBill" : 108,
+    "deleted" : false
   }, {
     "name" : "b",
     "role" : "SELLER",
     "passwordHash" : "rd1ROBOYVj5A+T/7migyD3rBsVCjQpfWy5FTHuSoIHo=",
-    "staffBill" : 32
+    "staffBill" : 32,
+    "deleted" : false
   }, {
     "name" : "c",
     "role" : "ROOT",
     "passwordHash" : "9b5ECwOqVL8CITg44NW+CuhJRFYYVzAUmtVfH8vRj88=",
-    "staffBill" : 300
+    "staffBill" : 401,
+    "deleted" : false
   }, {
     "name" : "x",
     "role" : "ADMIN",
     "passwordHash" : "7zBr5lWa5kxPRAVAUKZ0YX1UU0yIYaCF9x/N5HnIDQ0=",
-    "staffBill" : 0
+    "staffBill" : 0,
+    "deleted" : true
   }, {
     "name" : "y",
-    "role" : "SELLER",
+    "role" : "ADMIN",
     "passwordHash" : "9b5ECwOqVL8CITg44NW+CuhJRFYYVzAUmtVfH8vRj88=",
-    "staffBill" : 0
+    "staffBill" : 0,
+    "deleted" : true
+  }, {
+    "name" : "z",
+    "role" : "STAFF",
+    "passwordHash" : null,
+    "staffBill" : 0,
+    "deleted" : true
+  }, {
+    "name" : "asdf",
+    "role" : "STAFF",
+    "passwordHash" : null,
+    "staffBill" : 0,
+    "deleted" : true
+  }, {
+    "name" : "asd",
+    "role" : "STAFF",
+    "passwordHash" : null,
+    "staffBill" : 0,
+    "deleted" : false
+  }, {
+    "name" : "asdf5",
+    "role" : "STAFF",
+    "passwordHash" : null,
+    "staffBill" : 0,
+    "deleted" : true
+  }, {
+    "name" : "asd6",
+    "role" : "STAFF",
+    "passwordHash" : null,
+    "staffBill" : 0,
+    "deleted" : true
+  }, {
+    "name" : "asd7",
+    "role" : "STAFF",
+    "passwordHash" : null,
+    "staffBill" : 0,
+    "deleted" : true
   } ],
   "articles" : [ {
     "timestamp" : null,
@@ -36,7 +78,7 @@
     "barCode" : null,
     "sellingPrice" : 0,
     "items" : [ ],
-    "stockQuantity" : -3
+    "stockQuantity" : -1
   }, {
     "timestamp" : 1625861928.879748000,
     "name" : "b",
@@ -50,7 +92,7 @@
     "barCode" : "23456789",
     "sellingPrice" : 100,
     "items" : [ ],
-    "stockQuantity" : 0
+    "stockQuantity" : -1
   }, {
     "timestamp" : 1627163278.602012200,
     "name" : "d",
@@ -64,10 +106,10 @@
     "barCode" : "1230",
     "sellingPrice" : 101,
     "items" : [ ],
-    "stockQuantity" : -2
+    "stockQuantity" : 12
   } ],
   "messages" : [ {
-    "sender" : "u5",
+    "sender" : "u",
     "timestamp" : 1646581738.644869700,
     "text" : "asdf",
     "subject" : {
@@ -75,7 +117,7 @@
       "periodID" : 107
     }
   }, {
-    "sender" : "u5",
+    "sender" : "u",
     "timestamp" : 1646581777.535984200,
     "text" : "asdf",
     "subject" : {
@@ -83,7 +125,7 @@
       "periodID" : 108
     }
   }, {
-    "sender" : "u5",
+    "sender" : "u",
     "timestamp" : 1646581783.244774400,
     "text" : "fdsa",
     "subject" : {
@@ -91,7 +133,7 @@
       "periodID" : 108
     }
   }, {
-    "sender" : "u5",
+    "sender" : "u",
     "timestamp" : 1646582875.947650700,
     "text" : "asdf",
     "subject" : {

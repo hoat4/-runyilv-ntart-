@@ -32,3 +32,8 @@
 }
 
 .inactive-user-cell { -fx-text-fill: #aaa; }
+
+.unknown-article-cell { -fx-text-fill: #aaa; -fx-font-style: italic; }
+.staff-bill-pay-cell { -fx-text-fill: #66f; }
+.staff-bill-table { -fx-background-insets: 0, 1 0 0 0; padding: 1 0 0 0;}
+.staff-bill-table > .column-header { -fx-background-insets: 0, 1 0 0 0; /* nem tudtam eltüntetni az oszlopok melletti 1px-es fehérséget */}

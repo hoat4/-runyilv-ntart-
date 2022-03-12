@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -110,6 +111,16 @@ public class RenameUserOp implements AdminOperation {
             if (username.equals(oldName))
                 username = newName;
             delegate.modifyCash(username, cash, creditCardAmount);
+        }
+
+        @Override
+        public void staffBillPay(Sale.StaffBillID bill, String administrator, int money,
+                                 Instant timestamp) {
+            if (bill.username.equals(oldName))
+                bill = new Sale.StaffBillID(newName);
+            if (administrator.equals(oldName))
+                administrator = newName;
+            delegate.staffBillPay(bill, administrator, money);
         }
     }
 }

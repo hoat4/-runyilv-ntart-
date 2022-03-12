@@ -4,14 +4,13 @@ import arunyilvantarto.Main;
 import arunyilvantarto.domain.DataRoot;
 import arunyilvantarto.domain.User;
 import arunyilvantarto.operations.*;
-import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.collections.FXCollections;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextInputDialog;
 import org.tbee.javafx.scene.layout.MigPane;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,7 +34,7 @@ public class UsersTab {
     }
 
     public Node build() {
-        return new MigPane("fill", "[][grow]", "[][grow]").
+        return new MigPane("fill, insets unrelated", "[] unrelated [grow]", "[] [grow]").
                 add(newUserButton(), "grow").
                 add(userViewContainer, "grow, spany, wrap").
                 add(usersTable(), "grow");

@@ -336,7 +336,7 @@ public class SellingTab implements OperationListener {
     }
 
     private void selectArticleManually() {
-        Dialog<Article> dialog = new Dialog();
+        Dialog<Article> dialog = new Dialog<>();
         dialog.setTitle("Termékek");
 
         TableView<Article> articlesTable = articlesTable();

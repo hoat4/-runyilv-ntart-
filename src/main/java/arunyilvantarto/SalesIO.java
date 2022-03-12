@@ -24,6 +24,7 @@ public class SalesIO implements AutoCloseable{
     private static final String PERIOD_OPEN_PRODUCT_NAME = "NYITÁS";
     private static final String PERIOD_CLOSE_PRODUCT_NAME = "ZÁRÁS";
     private static final String MODIFY_CASH_PRODUCT_NAME = "KASSZAMÓDOSÍTÁS";
+    private static final String STAFF_BILL_PAY_PRODUCT_NAME = "SZEMÉLYZETI SZÁMLA BEFIZETÉS";
 
     private final DataRoot data;
     private final FileChannel channel;
@@ -69,6 +70,12 @@ public class SalesIO implements AutoCloseable{
     public synchronized void modifyCash(String username, int cash, int creditCardAmount) {
         LocalDateTime timestamp = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
         writeImpl(timestamp, MODIFY_CASH_PRODUCT_NAME, 0, cash, username, null, creditCardAmount, 0, null);
+    }
+
+    public synchronized void staffBillPay(Sale.StaffBillID bill, String administrator, int money) {
+        LocalDateTime timestamp = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
+        writeImpl(timestamp, STAFF_BILL_PAY_PRODUCT_NAME, 1, -money, administrator, bill,
+                0, 0, null);
     }
 
     public synchronized void read(SalesVisitor visitor) {
@@ -152,6 +159,9 @@ public class SalesIO implements AutoCloseable{
                 break;
             case MODIFY_CASH_PRODUCT_NAME:
                 visitor.modifyCash(seller, pricePerProduct, creditCardAmount);
+                break;
+            case STAFF_BILL_PAY_PRODUCT_NAME:
+                visitor.staffBillPay((Sale.StaffBillID) billID, seller, -pricePerProduct, timestamp);
                 break;
             default:
                 Sale sale = new Sale();
