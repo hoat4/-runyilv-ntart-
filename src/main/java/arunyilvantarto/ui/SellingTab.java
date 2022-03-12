@@ -478,7 +478,10 @@ public class SellingTab implements OperationListener {
         dialog.setResultConverter(b -> b == addButtonType ? usersTable.getSelectionModel().getSelectedItem() : null);
 
         dialog.showAndWait().ifPresent(staffBill -> {
-            itemsTable.getItems().forEach(sale -> sale.billID = new Sale.StaffBillID(staffBill.name));
+            itemsTable.getItems().forEach(sale -> {
+                sale.billID = new Sale.StaffBillID(staffBill.name);
+                sale.pricePerProduct = sale.article.staffPrice();
+            });
             payDone();
         });
 

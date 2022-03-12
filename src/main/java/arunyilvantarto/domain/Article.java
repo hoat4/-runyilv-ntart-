@@ -19,4 +19,10 @@ public class Article {
     public List<Item> items;
 
     public int stockQuantity;
+
+    public int staffPrice() {
+        if (items.isEmpty()) // ilyen valszeg nem lehetséges
+            return sellingPrice;
+        return items.get(items.size() - 1).purchasePrice;
+    }
 }
