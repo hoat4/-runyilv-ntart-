@@ -27,6 +27,7 @@ public class AdminPage implements OperationListener {
     private UsersTab users;
     private RevenueTab revenue;
     private MessagesTab messages;
+    private MenusTab menus;
 
     private Label logonLabel;
 
@@ -69,6 +70,10 @@ public class AdminPage implements OperationListener {
         revenueTab.setClosable(false);
         tabPane.getTabs().add(revenueTab);
 
+        Tab menusTab = new Tab("Menük", (this.menus = new MenusTab(main)).build());
+        menusTab.setClosable(false);
+        //tabPane.getTabs().add(menusTab);
+
         //Tab messagesTab = new Tab("Üzenetek", (this.messages = new MessagesTab(this)).build());
         //messagesTab.setClosable(false);
         //tabPane.getTabs().add(messagesTab);
@@ -109,6 +114,7 @@ public class AdminPage implements OperationListener {
         addItem.onEvent(op);
         users.onEvent(op);
         revenue.onEvent(op);
+        menus.onEvent(op);
     }
 
     public void showArticle(Article article) {

@@ -14,7 +14,7 @@ import org.tbee.javafx.scene.layout.MigPane;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.lang.Double.POSITIVE_INFINITY;
+import static arunyilvantarto.ui.UIUtil.TableBuilder.UNLIMITED_WIDTH;
 import static java.util.Comparator.comparing;
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
@@ -73,8 +73,8 @@ public class UsersTab {
 
     private TableView<User> usersTable() {
         usersTable = new UIUtil.TableBuilder<>(sortedUsers()).
-                col("Név", 230, POSITIVE_INFINITY, u -> u.name, u -> u.deleted ? "inactive-user-cell" : null).
-                col("Típus", 180, POSITIVE_INFINITY, u -> roleToString(u.role), u -> u.deleted ? "inactive-user-cell" : null).
+                col("Név", 230, UNLIMITED_WIDTH, u -> u.name, u -> u.deleted ? "inactive-user-cell" : null).
+                col("Típus", 180, UNLIMITED_WIDTH, u -> roleToString(u.role), u -> u.deleted ? "inactive-user-cell" : null).
                 onSelected(user -> {
                     boolean showStaffBill = userView != null && userView.staffBillShown();
                     userViewContainer.getChildren().clear();

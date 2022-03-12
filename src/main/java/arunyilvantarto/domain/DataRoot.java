@@ -9,6 +9,7 @@ public class DataRoot {
     public List<User> users = new ArrayList<>();
     public List<Article> articles = new ArrayList<>();
     public List<Message> messages = new ArrayList<>();
+    public List<Menu> menus = new ArrayList<>();
 
     public Article article(String name) {
         return findArticle(name).
