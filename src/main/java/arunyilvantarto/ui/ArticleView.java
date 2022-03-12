@@ -20,6 +20,7 @@ import org.tbee.javafx.scene.layout.MigPane;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -133,14 +134,18 @@ public class ArticleView {
 
         TableColumn<Item, Integer> stockQuantityColumn = new TableColumn<>("Mennyiség");
         stockQuantityColumn.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().purchaseQuantity));
-        stockQuantityColumn.setMinWidth(100);
+        stockQuantityColumn.setMinWidth(80);
         itemTable.getColumns().add(stockQuantityColumn);
+
+        TableColumn<Item, LocalDate> expirationColumn = new TableColumn<>("Lejárat");
+        expirationColumn.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().expiration));
+        expirationColumn.setMinWidth(80);
+        itemTable.getColumns().add(expirationColumn);
 
         TableColumn<Item, Integer> purchasePriceColumn = new TableColumn<>("Ár");
         purchasePriceColumn.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().purchasePrice));
-        purchasePriceColumn.setMinWidth(100);
+        purchasePriceColumn.setMinWidth(80);
         itemTable.getColumns().add(purchasePriceColumn);
-
 
         MenuItem deleteMenuItem = new MenuItem("Törlés");
         deleteMenuItem.setOnAction(evt -> {
