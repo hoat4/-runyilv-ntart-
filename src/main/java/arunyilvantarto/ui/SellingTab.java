@@ -180,7 +180,7 @@ public class SellingTab implements OperationListener {
 
         TextField barcodeField = new TextField();
         UIUtil.barcodeField(barcodeField, text -> {
-            text = text.replaceAll("[^0-9*]", "");
+            text = text.replaceAll("[^0-9*\\-]", "");
 
             if (text.length() > 20) {
                 barcodeField.setText("");
@@ -289,6 +289,11 @@ public class SellingTab implements OperationListener {
         payFromStaffBillButton.setOnAction(evt -> payToStaffBill());
         UIUtil.assignShortcut(payFromStaffBillButton, new KeyCodeCombination(F8));
 
+        Button returnButton = new Button("Visszáru (F9)");
+        returnButton.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+        returnButton.setOnAction(evt -> returnByBarcode());
+        UIUtil.assignShortcut(returnButton, new KeyCodeCombination(F9));
+
         Button payButton = new Button("Fizetés (szóköz)");
         payButton.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
         payButton.setOnAction(evt -> pay());
@@ -299,7 +304,7 @@ public class SellingTab implements OperationListener {
         payFromStaffBillButton.disableProperty().bind(hasNoItems);
         payButton.disableProperty().bind(hasNoItems);
 
-        return new FlowPane(selectArticleManuallyButton, stornoButton, payFromStaffBillButton, payButton) {
+        return new FlowPane(selectArticleManuallyButton, stornoButton, payFromStaffBillButton, returnButton, payButton) {
             {
                 setHgap(10);
                 setVgap(10);
@@ -358,7 +363,7 @@ public class SellingTab implements OperationListener {
         );
         dialog.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
         dialog.getDialogPane().lookupButton(addButtonType).disableProperty().bind(createBooleanBinding(() ->
-                        !quantityField.getText().matches("[0-9]+") || articlesTable.getSelectionModel().getSelectedItem() == null,
+                        !quantityField.getText().matches("-?[0-9]+") || articlesTable.getSelectionModel().getSelectedItem() == null,
                 quantityField.textProperty(), articlesTable.getSelectionModel().selectedItemProperty()));
         dialog.setResultConverter(b -> b == addButtonType ? articlesTable.getSelectionModel().getSelectedItem() : null);
 
@@ -385,7 +390,25 @@ public class SellingTab implements OperationListener {
     }
 
     private void pay() {
-        int roundedPrice = (sumPrice + 2) / 5 * 5;
+        int roundedPrice = sumPrice < 0 ? (sumPrice - 2) / 5 * 5 : (sumPrice + 2) / 5 * 5;
+        if (roundedPrice == 0) {
+            periodPayDone();
+            return;
+        }
+
+        if (roundedPrice < 0) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Fizetés");
+            alert.setHeaderText("Visszaáru kifizetése");
+            alert.setContentText("Vásárlónak járó összeg: " + -roundedPrice + " Ft");
+            alert.getButtonTypes().add(ButtonType.CANCEL);
+            alert.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
+            alert.showAndWait().ifPresent(buttonType -> {
+                if (buttonType == ButtonType.OK)
+                    periodPayDone();
+            });
+            return;
+        }
 
         TextInputDialog dialog = new TextInputDialog();
         dialog.setTitle("Fizetés");
@@ -414,13 +437,17 @@ public class SellingTab implements OperationListener {
                 alert.showAndWait();
             }
 
-            for (Sale sale : itemsTable.getItems())
-                sale.billID = new Sale.PeriodBillID(sellingPeriod.id);
-
-            paymentIDCounter++;
-            payDone();
+            periodPayDone();
         });
 
+    }
+
+    private void periodPayDone() {
+        for (Sale sale : itemsTable.getItems())
+            sale.billID = new Sale.PeriodBillID(sellingPeriod.id);
+
+        paymentIDCounter++;
+        payDone();
     }
 
     private void payToStaffBill() {
@@ -512,6 +539,31 @@ public class SellingTab implements OperationListener {
             Platform.runLater(() -> { // időnként JavaFX bug miatt a dialógus teljesen fehér volt e nélkül
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Sztornó sikertelen");
+                alert.setHeaderText("Ismeretlen vonalkód");
+                alert.setContentText("Nem ismert olyan termék, melynek ez lenne a vonalkódja. ");
+                alert.showAndWait();
+                stornoByBarcode();
+            });
+        });
+    }
+
+    private void returnByBarcode() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Visszaáru");
+        dialog.setHeaderText("Olvasd be a visszahozott termék vonalkódját");
+        dialog.getDialogPane().getStylesheets().add("/arunyilvantarto/selling-dialog.css");
+        UIUtil.barcodeField(dialog.getEditor(), barcode -> {
+            main.dataRoot.articles.stream().filter(a -> Objects.equals(a.barCode, barcode)).findAny().ifPresent(article -> {
+                dialog.close();
+                addArticle(article, -1);
+            });
+        });
+        dialog.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(createBooleanBinding(() ->
+                !UIUtil.isBarcode(dialog.getEditor().getText()), dialog.getEditor().textProperty()));
+        dialog.showAndWait().ifPresent(s -> {
+            Platform.runLater(() -> { // időnként JavaFX bug miatt a dialógus teljesen fehér volt e nélkül
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Visszáru");
                 alert.setHeaderText("Ismeretlen vonalkód");
                 alert.setContentText("Nem ismert olyan termék, melynek ez lenne a vonalkódja. ");
                 alert.showAndWait();
