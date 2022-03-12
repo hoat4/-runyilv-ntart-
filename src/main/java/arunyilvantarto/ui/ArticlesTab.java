@@ -150,7 +150,7 @@ public class ArticlesTab {
         d.getStylesheets().add("/arunyilvantarto/app.css");
 
         d.lookupButton(addButtonType).disableProperty().bind(createBooleanBinding(() ->
-                        nameField.getText().isEmpty() || !priceField.getText().matches("[0-9]+") ||
+                        nameField.getText().isEmpty() || !priceField.getText().matches("-?[0-9]+") ||
                                 !UIUtil.isBarcode(barcodeField.getText()) && !barcodeField.getText().isEmpty(),
                 nameField.textProperty(), priceField.textProperty(), barcodeField.textProperty()));
 

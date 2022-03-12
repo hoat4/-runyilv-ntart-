@@ -180,7 +180,7 @@ public class ArticleView {
             d.setTitle("Termék ára");
             d.setContentText("Ár: ");
             d.getDialogPane().lookupButton(ButtonType.OK).disableProperty().bind(createBooleanBinding(
-                    () -> !d.getEditor().getText().matches("[0-9]+"), d.getEditor().textProperty()
+                    () -> !d.getEditor().getText().matches("-?[0-9]+"), d.getEditor().textProperty()
             ));
             d.showAndWait().ifPresent(s -> {
                 articlesTab.main.executeOperation(new ChangeArticleOp(article.name,
