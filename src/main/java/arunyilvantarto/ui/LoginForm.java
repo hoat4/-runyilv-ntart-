@@ -88,7 +88,7 @@ public class LoginForm {
 
 
         Optional<User> o = data.users.stream().filter(u -> u.name.equals(usernameField.field.getText())).findAny();
-        if (o.isEmpty()) {
+        if (o.isEmpty() || o.get().deleted) {
             usernameField.showError("Ilyen nevű felhasználó nem létezik");
             return;
         }

@@ -6,10 +6,7 @@ import arunyilvantarto.Security;
 import arunyilvantarto.domain.Sale;
 import arunyilvantarto.domain.User;
 import arunyilvantarto.domain.User.Role;
-import arunyilvantarto.operations.AdminOperation;
-import arunyilvantarto.operations.ChangePasswordOp;
-import arunyilvantarto.operations.ChangeRoleOp;
-import arunyilvantarto.operations.RenameUserOp;
+import arunyilvantarto.operations.*;
 import javafx.beans.binding.Bindings;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -135,12 +132,20 @@ public class UserView {
             d.showAndWait().ifPresent(newName -> app.executeOperation(new RenameUserOp(user.name, newName)));
         });
 
-        return new MigPane("align center center, hidemode 3").
+        CheckBox activeCheckBox = new CheckBox();
+        activeCheckBox.setSelected(!user.deleted);
+        activeCheckBox.selectedProperty().addListener((o, old, value) ->{
+            app.executeOperation(new SetUserDeletedOp(user.name, !value));
+        });
+
+        return new MigPane("align center center, hidemode 3, wrap 2").
                 add(new Label("Név: ")).
-                add(userNameButton, "wrap").
+                add(userNameButton).
                 add(new Label("Típus: ")).
-                add(roleComboBox, "grow, wrap").
-                add(changePasswordButton, "grow, span 2, wrap");
+                add(roleComboBox, "grow").
+                add(new Label("Aktív: ")).
+                add(activeCheckBox).
+                add(changePasswordButton, "grow, span 2");
 
     }
 

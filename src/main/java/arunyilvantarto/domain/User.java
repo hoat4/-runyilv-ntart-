@@ -11,6 +11,11 @@ public class User {
     public Role role;
     public byte[] passwordHash;
     public int staffBill;
+    public boolean deleted;
+
+    public boolean canPurchaseWithStaffBill() {
+        return !deleted;
+    }
 
     public enum Role {
         ROOT, ADMIN, SELLER, STAFF;

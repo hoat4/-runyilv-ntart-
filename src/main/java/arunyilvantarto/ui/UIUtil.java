@@ -4,6 +4,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCombination;
+import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import java.time.Instant;
@@ -39,6 +40,7 @@ public class UIUtil {
             return true;
         }
     }
+
 
     public static boolean isBarcode(String s) {
         return s.matches("[0-9]+");
@@ -89,6 +91,37 @@ public class UIUtil {
         public TableBuilder<T> col(String caption, double minWidth, double maxWidth, Function<T, Object> function) {
             TableColumn<T, Object> col = new TableColumn<>(caption);
             col.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(function.apply(c.getValue())));
+            col.setMinWidth(minWidth);
+            col.setMaxWidth(maxWidth);
+            columns.add(col);
+            return this;
+        }
+
+        public TableBuilder<T> col(String caption, double minWidth, double maxWidth, Function<T, Object> function, Function<T, String> classFunction) {
+            TableColumn<T, Object> col = new TableColumn<>(caption);
+            col.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue()));
+            col.setCellFactory(c -> new TableCell<>() {
+
+                private String prevClass;
+
+                @SuppressWarnings("unchecked")
+                @Override
+                protected void updateItem(Object item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (prevClass != null)
+                        getStyleClass().remove(prevClass);
+                    if (empty) {
+                        prevClass = null;
+                        setText(null);
+                        return;
+                    }
+                    setText(String.valueOf(function.apply((T) item)));
+                    String clazz = classFunction.apply((T) item);
+                    if (clazz != null)
+                        getStyleClass().add(clazz);
+                    prevClass = clazz;
+                }
+            });
             col.setMinWidth(minWidth);
             col.setMaxWidth(maxWidth);
             columns.add(col);

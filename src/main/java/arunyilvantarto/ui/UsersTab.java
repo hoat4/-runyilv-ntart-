@@ -3,15 +3,20 @@ package arunyilvantarto.ui;
 import arunyilvantarto.Main;
 import arunyilvantarto.domain.DataRoot;
 import arunyilvantarto.domain.User;
-import arunyilvantarto.operations.AddUserOp;
-import arunyilvantarto.operations.AdminOperation;
-import arunyilvantarto.operations.ChangeRoleOp;
-import arunyilvantarto.operations.RenameUserOp;
+import arunyilvantarto.operations.*;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.collections.FXCollections;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import org.tbee.javafx.scene.layout.MigPane;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.lang.Double.POSITIVE_INFINITY;
+import static java.util.Comparator.comparing;
 import static javafx.beans.binding.Bindings.createBooleanBinding;
 
 public class UsersTab {
@@ -37,10 +42,10 @@ public class UsersTab {
     }
 
     public void onEvent(AdminOperation op) {
-        if (op instanceof AddUserOp)
-            usersTable.getItems().add(((AddUserOp) op).user);
-        if (op instanceof ChangeRoleOp || op instanceof RenameUserOp)
+        if (op instanceof AddUserOp || op instanceof ChangeRoleOp || op instanceof RenameUserOp || op instanceof SetUserDeletedOp) {
+            usersTable.getItems().setAll(sortedUsers());
             usersTable.refresh();
+        }
         if (userView != null)
             userView.onEvent(op);
     }
@@ -68,28 +73,26 @@ public class UsersTab {
     }
 
     private TableView<User> usersTable() {
-        usersTable = new TableView<>();
-        usersTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        TableColumn<User, String> nameColumn = new TableColumn<>("Név");
-        nameColumn.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().name));
-        nameColumn.setMinWidth(230);
-        usersTable.getColumns().add(nameColumn);
-
-        TableColumn<User, String> typeColumn = new TableColumn<>("Típus");
-        typeColumn.setCellValueFactory(c -> new ReadOnlyStringWrapper(roleToString(c.getValue().role)));
-        typeColumn.setMinWidth(180);
-        usersTable.getColumns().add(typeColumn);
-
-        usersTable.getItems().addAll(data.users);
-        usersTable.getSelectionModel().selectedItemProperty().addListener((o, old, value) -> {
-            boolean showStaffBill = userView != null && userView.staffBillShown();
-            userView = new UserView(app, value);
-            userViewContainer.getChildren().clear();
-            userViewContainer.add(userView.build(showStaffBill), "grow");
-        });
+        usersTable = new UIUtil.TableBuilder<>(sortedUsers()).
+                col("Név", 230, POSITIVE_INFINITY, u -> u.name, u -> u.deleted ? "inactive-user-cell" : null).
+                col("Típus", 180, POSITIVE_INFINITY, u -> roleToString(u.role), u -> u.deleted ? "inactive-user-cell" : null).
+                onSelected(user -> {
+                    boolean showStaffBill = userView != null && userView.staffBillShown();
+                    userViewContainer.getChildren().clear();
+                    if (user == null) {
+                        userView = null;
+                    } else {
+                        userView = new UserView(app, user);
+                        userViewContainer.add(userView.build(showStaffBill), "grow");
+                    }
+                }).
+                build();
 
         return usersTable;
+    }
+
+    private List<User> sortedUsers() {
+        return app.dataRoot.users.stream().sorted(comparing(u->u.deleted)).collect(Collectors.toList());
     }
 
     void showUser(User user) {

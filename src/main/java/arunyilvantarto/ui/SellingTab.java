@@ -26,6 +26,7 @@ import org.tbee.javafx.scene.layout.MigPane;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static arunyilvantarto.ui.UIUtil.TableBuilder.UNLIMITED_WIDTH;
 import static javafx.beans.binding.Bindings.*;
@@ -426,7 +427,8 @@ public class SellingTab implements OperationListener {
         Dialog<User> dialog = new Dialog<>();
         dialog.setTitle("Személyzeti számlák");
 
-        TableView<User> usersTable = new UIUtil.TableBuilder<>(main.dataRoot.users).
+        List<User> users = main.dataRoot.users.stream().filter(User::canPurchaseWithStaffBill).collect(Collectors.toList());
+        TableView<User> usersTable = new UIUtil.TableBuilder<>(users).
                 col("Felhasználók", 0, UNLIMITED_WIDTH, a -> a.name).
                 build();
 
