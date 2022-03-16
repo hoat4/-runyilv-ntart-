@@ -183,7 +183,7 @@ public class UserView {
 
     private Node staffBill() {
         staffBillTable = new UIUtil.TableBuilder<StaffBillItem>(List.of()).
-                col("Dátum", 100, UNLIMITED_WIDTH, sale -> sale.date().atZone(ZoneId.systemDefault()).format(UIUtil.DATETIME_FORMAT)).
+                col("Dátum", 90, UNLIMITED_WIDTH, sale -> sale.date().atZone(ZoneId.systemDefault()).format(UIUtil.DATETIME_FORMAT)).
                 col("Termék", 170, UNLIMITED_WIDTH,
                         item -> {
                             if (item instanceof StaffBillPayItem)
