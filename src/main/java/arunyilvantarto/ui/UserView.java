@@ -197,7 +197,7 @@ public class UserView {
                 col("Ár", 50, UNLIMITED_WIDTH, item -> item instanceof StaffBillPurchaseItem
                         ? ((StaffBillPurchaseItem) item).sale.pricePerProduct + " Ft"
                         : "").
-                col("Mennyiség", 80, UNLIMITED_WIDTH, item -> item instanceof StaffBillPurchaseItem
+                col("Db.", 80, UNLIMITED_WIDTH, item -> item instanceof StaffBillPurchaseItem
                         ? ((StaffBillPurchaseItem) item).sale.quantity : "").
                 col("Eladó", 80, UNLIMITED_WIDTH, StaffBillItem::seller).
                 col("Összeg", 80, UNLIMITED_WIDTH, sale -> sale.money() + " Ft").
