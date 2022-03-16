@@ -217,9 +217,14 @@ public class UserView {
                     dialog.getEditor().textProperty()));
             dialog.showAndWait().ifPresent(s -> {
                 int money = Integer.parseInt(s);
-                app.salesIO.staffBillPay(new Sale.StaffBillID(user.name), app.logonUser.name, money);
+                Sale.StaffBillID billID = new Sale.StaffBillID(user.name);
+                app.salesIO.staffBillPay(billID, app.logonUser.name, money);
                 staffBillDebt -= money;
                 refreshStaffBillMoneyLabel();
+
+                // ez így nem jó hosszabb távon, majd le kéne cserélni az operationökhöz hasonlóan egy értesítéses rendszerre
+                // mert a timestamp sem jó, nem egyezik a SalesIO által beírttal
+                staffBillTable.getItems().add(new StaffBillPayItem(billID, app.logonUser.name, money, Instant.now()));
             });
         });
 
