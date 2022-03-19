@@ -4,6 +4,7 @@ import arunyilvantarto.Main;
 import arunyilvantarto.domain.DataRoot;
 import arunyilvantarto.domain.User;
 import arunyilvantarto.operations.*;
+import javafx.collections.FXCollections;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -42,7 +43,7 @@ public class UsersTab {
 
     public void onEvent(AdminOperation op) {
         if (op instanceof AddUserOp || op instanceof ChangeRoleOp || op instanceof RenameUserOp || op instanceof SetUserDeletedOp) {
-            usersTable.getItems().setAll(sortedUsers());
+            usersTable.getItems().setAll(app.dataRoot.users);
             usersTable.refresh();
         }
         if (userView != null)
@@ -72,7 +73,7 @@ public class UsersTab {
     }
 
     private TableView<User> usersTable() {
-        usersTable = new UIUtil.TableBuilder<>(sortedUsers()).
+        usersTable = new UIUtil.TableBuilder<>(app.dataRoot.users).
                 col("Név", 230, UNLIMITED_WIDTH, u -> u.name, u -> u.deleted ? "inactive-user-cell" : null).
                 col("Típus", 180, UNLIMITED_WIDTH, u -> roleToString(u.role), u -> u.deleted ? "inactive-user-cell" : null).
                 onSelected(user -> {
@@ -87,11 +88,15 @@ public class UsersTab {
                 }).
                 build();
 
-        return usersTable;
-    }
+        usersTable.setSortPolicy(tv -> {
+            if (usersTable.getSortOrder().isEmpty()) {
+                FXCollections.sort(tv.getItems(), comparing(u -> u.deleted));
+                return true;
+            } else
+                return TableView.DEFAULT_SORT_POLICY.call(tv);
+        });
 
-    private List<User> sortedUsers() {
-        return app.dataRoot.users.stream().sorted(comparing(u->u.deleted)).collect(Collectors.toList());
+        return usersTable;
     }
 
     void showUser(User user) {

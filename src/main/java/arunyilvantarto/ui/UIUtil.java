@@ -98,8 +98,26 @@ public class UIUtil {
         }
 
         public TableBuilder<T> col(String caption, double minWidth, double maxWidth, Function<T, Object> function, Function<T, String> classFunction) {
+            class ItemAndValue implements Comparable<ItemAndValue>{
+
+                public final T item;
+                public final Object value;
+
+                public ItemAndValue(T item, Object value) {
+                    this.item = item;
+                    this.value = value;
+                }
+
+                @SuppressWarnings({"rawtypes", "unchecked"})
+                @Override
+                public int compareTo(ItemAndValue o) {
+                    return ((Comparable)value).compareTo(o.value);
+                }
+            }
+
             TableColumn<T, Object> col = new TableColumn<>(caption);
-            col.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue()));
+            col.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(
+                    new ItemAndValue(c.getValue(), function.apply(c.getValue()))));
             col.setCellFactory(c -> new TableCell<>() {
 
                 private String prevClass;
@@ -107,7 +125,8 @@ public class UIUtil {
                 @SuppressWarnings("unchecked")
                 @Override
                 protected void updateItem(Object item, boolean empty) {
-                    super.updateItem(item, empty);
+                    ItemAndValue iav = (ItemAndValue) item;
+                    super.updateItem(iav, empty);
                     if (prevClass != null)
                         getStyleClass().remove(prevClass);
                     if (empty) {
@@ -115,8 +134,8 @@ public class UIUtil {
                         setText(null);
                         return;
                     }
-                    setText(String.valueOf(function.apply((T) item)));
-                    String clazz = classFunction.apply((T) item);
+                    setText(String.valueOf(iav.value));
+                    String clazz = classFunction.apply(iav.item);
                     if (clazz != null)
                         getStyleClass().add(clazz);
                     prevClass = clazz;
@@ -131,7 +150,7 @@ public class UIUtil {
         public TableBuilder<T> customCol(String caption, double minWidth, double maxWidth, Function<T, Node> function) {
             TableColumn<T, T> col = new TableColumn<>(caption);
             col.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue()));
-            col.setCellFactory(c -> new TableCell<T, T>() {
+            col.setCellFactory(c -> new TableCell<>() {
                 @Override
                 protected void updateItem(T item, boolean empty) {
                     if (item == null)
