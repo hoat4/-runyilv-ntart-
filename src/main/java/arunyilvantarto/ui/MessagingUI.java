@@ -2,7 +2,6 @@ package arunyilvantarto.ui;
 
 import arunyilvantarto.Main;
 import arunyilvantarto.domain.Message;
-import arunyilvantarto.operations.SendMessageOp;
 import javafx.application.Platform;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;

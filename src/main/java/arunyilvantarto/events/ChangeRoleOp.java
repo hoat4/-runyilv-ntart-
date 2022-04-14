@@ -1,9 +1,11 @@
-package arunyilvantarto.operations;
+package arunyilvantarto.events;
 
 import arunyilvantarto.Main;
 import arunyilvantarto.domain.DataRoot;
 import arunyilvantarto.domain.User;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
+@JsonTypeName("ChangeRole")
 public class ChangeRoleOp implements AdminOperation{
 
     public final String username;

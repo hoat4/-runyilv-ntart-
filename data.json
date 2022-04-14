@@ -3,7 +3,7 @@
     "name" : "u",
     "role" : "ROOT",
     "passwordHash" : "obGYKw8+PnQcilppY7LuB7KGqhB3PYmeue7d6oZYLlg=",
-    "staffBill" : 229,
+    "staffBill" : 309,
     "deleted" : false
   }, {
     "name" : "a",
@@ -14,7 +14,7 @@
   }, {
     "name" : "b",
     "role" : "SELLER",
-    "passwordHash" : "rd1ROBOYVj5A+T/7migyD3rBsVCjQpfWy5FTHuSoIHo=",
+    "passwordHash" : "obGYKw8+PnQcilppY7LuB7KGqhB3PYmeue7d6oZYLlg=",
     "staffBill" : 32,
     "deleted" : false
   }, {
@@ -73,40 +73,53 @@
     "deleted" : true
   } ],
   "articles" : [ {
-    "timestamp" : null,
     "name" : "Kitűző képpel",
+    "timestamp" : null,
     "barCode" : null,
     "sellingPrice" : 0,
     "items" : [ ],
-    "stockQuantity" : -1
+    "stockQuantity" : 2
   }, {
-    "timestamp" : 1625861928.879748000,
     "name" : "b",
+    "timestamp" : 1625861928.879748000,
     "barCode" : null,
-    "sellingPrice" : 23,
+    "sellingPrice" : -23,
     "items" : [ ],
     "stockQuantity" : 0
   }, {
-    "timestamp" : 1627163234.300583900,
     "name" : "c",
+    "timestamp" : 1627163234.300583900,
     "barCode" : "23456789",
     "sellingPrice" : 100,
     "items" : [ ],
-    "stockQuantity" : -1
+    "stockQuantity" : -3
   }, {
-    "timestamp" : 1627163278.602012200,
     "name" : "d",
+    "timestamp" : 1627163278.602012200,
     "barCode" : "30456789",
     "sellingPrice" : 100,
     "items" : [ ],
     "stockQuantity" : -5
   }, {
-    "timestamp" : 1627469673.524480600,
     "name" : "e",
+    "timestamp" : 1627469673.524480600,
     "barCode" : "1230",
     "sellingPrice" : 101,
+    "items" : [ {
+      "id" : "c62f7486-9da5-48e9-8c45-0394a2a127ae",
+      "timestamp" : 1647101963.562844900,
+      "purchasePrice" : 80,
+      "purchaseQuantity" : 10,
+      "expiration" : null
+    } ],
+    "stockQuantity" : 19
+  }, {
+    "name" : "kedvezményteszt",
+    "timestamp" : 1647109376.353410900,
+    "barCode" : null,
+    "sellingPrice" : -100,
     "items" : [ ],
-    "stockQuantity" : 12
+    "stockQuantity" : -1
   } ],
   "messages" : [ {
     "sender" : "u",
@@ -140,5 +153,26 @@
       "type" : "OpenPeriod",
       "periodID" : 109
     }
+  } ],
+  "menus" : [ {
+    "name" : "egy",
+    "price" : 10,
+    "slots" : [ ]
+  }, {
+    "name" : "kettő",
+    "price" : 400,
+    "slots" : [ {
+      "articles" : [ ]
+    }, {
+      "articles" : [ ]
+    }, {
+      "articles" : [ ]
+    }, {
+      "articles" : [ ]
+    } ]
+  }, {
+    "name" : "három",
+    "price" : 30,
+    "slots" : [ ]
   } ]
 }

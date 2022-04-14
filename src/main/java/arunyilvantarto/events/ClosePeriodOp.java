@@ -1,13 +1,17 @@
-package arunyilvantarto.operations;
+package arunyilvantarto.events;
 
 import arunyilvantarto.Main;
 import arunyilvantarto.domain.DataRoot;
 import arunyilvantarto.domain.Message;
 import arunyilvantarto.domain.SellingPeriod;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import java.util.Map;
 
+// ezt valszeg törölni kéne, és periodend helyett vásárlásonként update-elni az article-kat
+
+@JsonTypeName("ClosePeriod")
 public class ClosePeriodOp implements AdminOperation {
 
     public final Map<String, Integer> purchasedProducts;

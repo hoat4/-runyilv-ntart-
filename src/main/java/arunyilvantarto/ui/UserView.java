@@ -3,10 +3,11 @@ package arunyilvantarto.ui;
 import arunyilvantarto.Main;
 import arunyilvantarto.SalesVisitor;
 import arunyilvantarto.Security;
+import arunyilvantarto.events.InventoryEvent;
 import arunyilvantarto.domain.Sale;
 import arunyilvantarto.domain.User;
 import arunyilvantarto.domain.User.Role;
-import arunyilvantarto.operations.*;
+import arunyilvantarto.events.*;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.scene.Node;
@@ -92,7 +93,7 @@ public class UserView {
         return tabPane.getSelectionModel().getSelectedItem() == staffBillTab;
     }
 
-    public void onEvent(AdminOperation op) {
+    public void onEvent(InventoryEvent op) {
         if (op instanceof ChangePasswordOp && ((ChangePasswordOp) op).username.equals(user.name))
             changePasswordButton.setText("Jelszó módosítása");
 
@@ -121,7 +122,7 @@ public class UserView {
         roleComboBox.getSelectionModel().select(user.role);
         roleComboBox.getSelectionModel().selectedItemProperty().addListener((o, old, value) -> {
             if (value != user.role) {
-                app.executeOperation(new ChangeRoleOp(user.name, user.role, value));
+                app.onEvent(new ChangeRoleOp(user.name, user.role, value));
             }
         });
 
@@ -146,7 +147,7 @@ public class UserView {
                     return;
                 }
 
-                app.executeOperation(new ChangePasswordOp(user.name, user.passwordHash, hash));
+                app.onEvent(new ChangePasswordOp(user.name, user.passwordHash, hash));
             });
         });
 
@@ -162,13 +163,13 @@ public class UserView {
                     d.getEditor().getText().isEmpty() || d.getEditor().getText().equals(user.name)
                             || app.dataRoot.users.stream().anyMatch(u -> u.name.equals(d.getEditor().getText())), d.getEditor().textProperty()));
 
-            d.showAndWait().ifPresent(newName -> app.executeOperation(new RenameUserOp(user.name, newName)));
+            d.showAndWait().ifPresent(newName -> app.onEvent(new RenameUserOp(user.name, newName)));
         });
 
         CheckBox activeCheckBox = new CheckBox();
         activeCheckBox.setSelected(!user.deleted);
         activeCheckBox.selectedProperty().addListener((o, old, value) -> {
-            app.executeOperation(new SetUserDeletedOp(user.name, !value));
+            app.onEvent(new SetUserDeletedOp(user.name, !value));
         });
 
         return new MigPane("align center center, hidemode 3, wrap 2").
@@ -218,7 +219,7 @@ public class UserView {
             dialog.showAndWait().ifPresent(s -> {
                 int money = Integer.parseInt(s);
                 Sale.StaffBillID billID = new Sale.StaffBillID(user.name);
-                app.salesIO.staffBillPay(billID, app.logonUser.name, money);
+                app.onEvent(new SellingEvent.StaffBillPay(billID, app.logonUser.name, money));
                 staffBillDebt -= money;
                 refreshStaffBillMoneyLabel();
 

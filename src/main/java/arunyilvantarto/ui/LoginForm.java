@@ -170,9 +170,9 @@ public class LoginForm {
             case ROOT:
                 AdminPage adminPage = new AdminPage(app);
                 final Node n = adminPage.build();
-                Scene scene = app.preload(n);
+                app.preload(n);
                 Platform.runLater(() -> {
-                    app.switchPage(scene, adminPage);
+                    app.switchPage(n, adminPage);
                     System.out.println((System.nanoTime() - begin) / 1000000);
                 });
                 break;

@@ -2,7 +2,8 @@ package arunyilvantarto.ui;
 
 import arunyilvantarto.Main;
 import arunyilvantarto.domain.Article;
-import arunyilvantarto.operations.*;
+import arunyilvantarto.events.InventoryEvent;
+import arunyilvantarto.events.*;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.Node;
@@ -37,7 +38,7 @@ public class ArticlesTab {
                 add(articlesTable, "grow");
     }
 
-    public void onEvent(AdminOperation op) {
+    public void onEvent(InventoryEvent op) {
         if (op instanceof AddArticleOp)
             articlesTable.getItems().add(((AddArticleOp) op).article);
         if (op instanceof DeleteArticleOp) {
@@ -106,7 +107,7 @@ public class ArticlesTab {
             alert.getDialogPane().lookupButton(cancelButtonType).requestFocus();
 
             if (alert.showAndWait().orElse(null) == deleteButtonType) {
-                main.executeOperation(new DeleteArticleOp(article));
+                main.onEvent(new DeleteArticleOp(article));
             }
         });
         deleteMenuItem.disableProperty().bind(createBooleanBinding(() ->
@@ -169,7 +170,7 @@ public class ArticlesTab {
 
         dialog.showAndWait().ifPresent(p -> {
             AddArticleOp op = new AddArticleOp(p);
-            main.executeOperation(op);
+            main.onEvent(op);
             articlesTable.getSelectionModel().select(p);
         });
     }

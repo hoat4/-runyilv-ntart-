@@ -3,12 +3,13 @@ package arunyilvantarto.ui;
 import arunyilvantarto.Main;
 import arunyilvantarto.OperationListener;
 import arunyilvantarto.SalesVisitor;
+import arunyilvantarto.events.InventoryEvent;
 import arunyilvantarto.domain.Message;
 import arunyilvantarto.domain.Sale;
 import arunyilvantarto.domain.SellingPeriod;
-import arunyilvantarto.operations.AdminOperation;
-import arunyilvantarto.operations.ClosePeriodOp;
-import arunyilvantarto.operations.RenameUserOp;
+import arunyilvantarto.events.ClosePeriodOp;
+import arunyilvantarto.events.RenameUserOp;
+import arunyilvantarto.events.SellingEvent;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -43,7 +44,7 @@ public class RevenueTab implements OperationListener {
     }
 
     @Override
-    public void onEvent(AdminOperation op) {
+    public void onEvent(InventoryEvent op) {
         if (op instanceof ClosePeriodOp)
             periodTable.getItems().add(((ClosePeriodOp) op).sellingPeriod);
         if (op instanceof RenameUserOp) {
@@ -218,7 +219,7 @@ public class RevenueTab implements OperationListener {
         dialog.showAndWait().ifPresent(s -> {
             setter.accept(Integer.parseInt(s));
             button.setText(s + " Ft");
-            main.salesIO.modifyCash(main.logonUser.name, cash, creditCardAmount);
+            main.onEvent(new SellingEvent.ModifyCashEvent(main.logonUser.name, cash, creditCardAmount));
         });
     }
 
@@ -260,7 +261,7 @@ public class RevenueTab implements OperationListener {
                 titledPane.setText(titlePrefix + " " + currentMessage.sender.name + " által");
         }
 
-        public void onEvent(AdminOperation op) {
+        public void onEvent(InventoryEvent op) {
             if (op instanceof RenameUserOp)
                 setTitle();
         }

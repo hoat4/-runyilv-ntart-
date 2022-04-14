@@ -1,4 +1,4 @@
-package arunyilvantarto.operations;
+package arunyilvantarto.events;
 
 import arunyilvantarto.Main;
 import arunyilvantarto.SalesIO;
@@ -6,6 +6,7 @@ import arunyilvantarto.SalesVisitor;
 import arunyilvantarto.domain.DataRoot;
 import arunyilvantarto.domain.Sale;
 import arunyilvantarto.domain.SellingPeriod;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -17,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 
 import static java.nio.file.StandardOpenOption.*;
 
+@JsonTypeName("RenameUser")
 public class RenameUserOp implements AdminOperation {
 
     public String oldName;

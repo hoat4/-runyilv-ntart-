@@ -1,8 +1,8 @@
 package arunyilvantarto;
 
-import arunyilvantarto.operations.AdminOperation;
+import arunyilvantarto.events.InventoryEvent;
 
 public interface OperationListener {
 
-    void onEvent(AdminOperation op);
+    void onEvent(InventoryEvent op);
 }

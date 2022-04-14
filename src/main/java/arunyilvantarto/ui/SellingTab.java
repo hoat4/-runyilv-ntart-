@@ -5,9 +5,10 @@ import arunyilvantarto.OperationListener;
 import arunyilvantarto.SalesIO;
 import arunyilvantarto.SalesVisitor;
 import arunyilvantarto.domain.*;
-import arunyilvantarto.operations.AdminOperation;
-import arunyilvantarto.operations.ClosePeriodOp;
-import arunyilvantarto.operations.SendMessageOp;
+import arunyilvantarto.events.ClosePeriodOp;
+import arunyilvantarto.events.InventoryEvent;
+import arunyilvantarto.events.SellingEvent;
+import arunyilvantarto.events.SendMessageOp;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -57,44 +58,58 @@ public class SellingTab implements OperationListener {
 
     public static void begin(Main app, Runnable preloadDoneCallback, Runnable cancelCallback) {
         SellingTab sellingTab = new SellingTab(app);
-        Scene scene = app.preload(sellingTab.build());
+        app.preload(sellingTab.build());
 
         Platform.runLater(() -> {
             if (preloadDoneCallback != null)
                 preloadDoneCallback.run();
 
-            SellingPeriodAndCash cashState = lastSellingPeriod(app.salesIO);
-            SellingPeriod lastSellingPeriod = cashState.lastSellingPeriod;
-            if (lastSellingPeriod != null && lastSellingPeriod.endTime == null)
-                throw new IllegalStateException("nem volt lezárva");
-
-            MoneyConfirmationResult confirmationResult = confirmMoneyInCash(sellingTab.main, cashState.cash);
-            if (!confirmationResult.canContinue) {
-                if (cancelCallback != null)
-                    cancelCallback.run();
-                return;
-            }
-
-            SellingPeriod sellingPeriod = new SellingPeriod();
-            sellingPeriod.id = lastSellingPeriod == null ? 1 : lastSellingPeriod.id + 1;
-            sellingPeriod.username = app.logonUser.name;
-            sellingPeriod.beginTime = Instant.now();
-            sellingPeriod.openCash = cashState.cash;
-            sellingPeriod.sales = new ArrayList<>();
-            sellingPeriod.openCreditCardAmount = cashState.creditCardAmount;
-            app.currentSellingPeriod = sellingPeriod;
-
-            if (confirmationResult.message != null) {
-                confirmationResult.message.subject = new Message.OpenPeriodSubject(sellingPeriod.id);
-                app.executeOperation(new SendMessageOp(confirmationResult.message));
-            }
-
-            app.salesIO.beginPeriod(sellingPeriod, confirmationResult.message == null ? null : confirmationResult.message.text);
-
-            sellingTab.sellingPeriod = sellingPeriod;
-            sellingTab.paymentIDCounter = cashState.lastPaymentID + 1;
-            app.switchPage(scene, sellingTab);
+            if (sellingTab.tryOpen())
+                app.switchPage(sellingTab.build(), sellingTab);
+            else if (cancelCallback != null)
+                cancelCallback.run();
         });
+    }
+
+    public static SellingTab begin2(Main app) {
+        SellingTab s = new SellingTab(app);
+        if (s.tryOpen())
+            return s;
+        else
+            return null;
+    }
+
+    private boolean tryOpen() {
+        SellingPeriodAndCash cashState = lastSellingPeriod(main.salesIO);
+        SellingPeriod lastSellingPeriod = cashState.lastSellingPeriod;
+        if (lastSellingPeriod != null && lastSellingPeriod.endTime == null)
+            throw new IllegalStateException("nem volt lezárva");
+
+        MoneyConfirmationResult confirmationResult = confirmMoneyInCash(main, cashState.cash);
+        if (!confirmationResult.canContinue)
+            return false;
+
+        SellingPeriod sellingPeriod = new SellingPeriod();
+        sellingPeriod.id = lastSellingPeriod == null ? 1 : lastSellingPeriod.id + 1;
+        sellingPeriod.username = main.logonUser.name;
+        sellingPeriod.beginTime = Instant.now();
+        sellingPeriod.openCash = cashState.cash;
+        sellingPeriod.sales = new ArrayList<>();
+        sellingPeriod.openCreditCardAmount = cashState.creditCardAmount;
+        main.currentSellingPeriod = sellingPeriod;
+
+        if (confirmationResult.message != null) {
+            confirmationResult.message.subject = new Message.OpenPeriodSubject(sellingPeriod.id);
+            main.onEvent(new SendMessageOp(confirmationResult.message));
+        }
+
+        main.onEvent(new SellingEvent.BeginPeriodEvent(
+                sellingPeriod, confirmationResult.message == null ? null : confirmationResult.message.text
+        ));
+
+        this.sellingPeriod = sellingPeriod;
+        this.paymentIDCounter = cashState.lastPaymentID + 1;
+        return true;
     }
 
     public static SellingPeriodAndCash lastSellingPeriod(SalesIO salesIO) {
@@ -172,8 +187,7 @@ public class SellingTab implements OperationListener {
                     final LoginForm loginForm = new LoginForm(main);
                     main.switchPage(loginForm.buildLayout(), null);
                 } else {
-                    AdminPage adminPage = new AdminPage(main);
-                    main.switchPage(adminPage.build(), adminPage);
+                    ((AdminPage) main.activePage()).closeSellingTab();
                 }
             }
         });
@@ -331,8 +345,7 @@ public class SellingTab implements OperationListener {
     }
 
     @Override
-    public void onEvent(AdminOperation op) {
-
+    public void onEvent(InventoryEvent op) {
     }
 
     private void selectArticleManually() {
@@ -500,7 +513,7 @@ public class SellingTab implements OperationListener {
         sellingPeriod.sales.addAll(itemsTable.getItems());
 
         main.executor.execute(() -> {
-            itemsTable.getItems().forEach(main.salesIO::sale);
+            itemsTable.getItems().forEach(sale -> main.onEvent(new SellingEvent.SaleEvent(sale)));
             Platform.runLater(() -> {
                 itemsTable.getItems().clear();
                 sumPrice = 0;
@@ -638,7 +651,7 @@ public class SellingTab implements OperationListener {
 
     public static void closePeriod(Main main, SellingPeriod sellingPeriod, Message closeComment) {
         sellingPeriod.endTime = closeComment != null ? closeComment.timestamp : Instant.now();
-        main.salesIO.endPeriod(sellingPeriod, closeComment == null ? null : closeComment.text);
+        main.onEvent(new SellingEvent.EndPeriodEvent(sellingPeriod, closeComment == null ? null : closeComment.text));
 
         Map<String, Integer> purchasedProducts = new HashMap<>();
         for (Sale sale : sellingPeriod.sales) {
@@ -654,6 +667,6 @@ public class SellingTab implements OperationListener {
             }
         }
 
-        main.executeOperation(new ClosePeriodOp(sellingPeriod, purchasedProducts, staffBillGrowths, closeComment));
+        main.onEvent(new ClosePeriodOp(sellingPeriod, purchasedProducts, staffBillGrowths, closeComment));
     }
 }

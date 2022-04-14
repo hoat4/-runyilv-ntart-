@@ -1,11 +1,13 @@
-package arunyilvantarto.operations;
+package arunyilvantarto.events;
 
 import arunyilvantarto.Main;
 import arunyilvantarto.domain.Article;
 import arunyilvantarto.domain.DataRoot;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import java.util.function.BiConsumer;
 
+@JsonTypeName("ChangeArticle")
 public class ChangeArticleOp implements AdminOperation {
 
     public final String articleID;

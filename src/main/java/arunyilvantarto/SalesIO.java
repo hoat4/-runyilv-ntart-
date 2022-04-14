@@ -2,6 +2,7 @@ package arunyilvantarto;
 
 import arunyilvantarto.domain.DataRoot;
 import arunyilvantarto.domain.Sale;
+import arunyilvantarto.events.SellingEvent;
 import arunyilvantarto.domain.SellingPeriod;
 
 import java.io.IOException;
@@ -38,6 +39,25 @@ public class SalesIO implements AutoCloseable{
 
     public synchronized void begin() {
         writeImpl("Időpont\tTermék\tMennyiség\tTermékenkénti ár\tEladó\tPeriódusazonosító vagy személynév\tBankkártya összeg\tVásárlásazonosító\n");
+    }
+
+    public synchronized void writeEvent(SellingEvent sellingEvent) {
+        switch (sellingEvent) {
+            case SellingEvent.BeginPeriodEvent e ->
+                    beginPeriod(e.period(), e.comment());
+
+            case SellingEvent.SaleEvent e ->
+                    sale(e.sale());
+
+            case SellingEvent.EndPeriodEvent e ->
+                    endPeriod(e.period(), e.comment());
+
+            case SellingEvent.ModifyCashEvent e ->
+                    modifyCash(e.username(), e.cash(), e.creditCardAmount());
+
+            case SellingEvent.StaffBillPay e ->
+                    staffBillPay(e.bill(), e.administrator(), e.money());
+        }
     }
 
     public synchronized void beginPeriod(SellingPeriod period, String comment) {

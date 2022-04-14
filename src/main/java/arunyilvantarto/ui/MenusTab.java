@@ -2,18 +2,14 @@ package arunyilvantarto.ui;
 
 import arunyilvantarto.Main;
 import arunyilvantarto.domain.Article;
+import arunyilvantarto.events.InventoryEvent;
 import arunyilvantarto.domain.Menu;
-import arunyilvantarto.operations.AddMenuOp;
-import arunyilvantarto.operations.AdminOperation;
-import arunyilvantarto.operations.ChangeArticleOp;
-import arunyilvantarto.operations.ChangeMenuOp;
+import arunyilvantarto.events.AddMenuOp;
+import arunyilvantarto.events.ChangeMenuOp;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 import org.tbee.javafx.scene.layout.MigPane;
 
 import static javafx.beans.binding.Bindings.add;
@@ -55,7 +51,7 @@ public class MenusTab {
                 add(menuTable, "grow");
     }
 
-    public void onEvent(AdminOperation op) {
+    public void onEvent(InventoryEvent op) {
         if (op instanceof AddMenuOp)
             menuTable.getItems().add(((AddMenuOp) op).menu);
         if (op instanceof ChangeMenuOp) {
@@ -102,7 +98,7 @@ public class MenusTab {
         });
 
         dialog.showAndWait().ifPresent(menu -> {
-            main.executeOperation(new AddMenuOp(menu));
+            main.onEvent(new AddMenuOp(menu));
         });
     }
 
@@ -166,7 +162,7 @@ public class MenusTab {
         void changeMenu(Runnable runnable) {
             Menu oldMenu = menu.clone();
             runnable.run();
-            main.executeOperation(new ChangeMenuOp(oldMenu, menu));
+            main.onEvent(new ChangeMenuOp(oldMenu, menu));
         }
 
         void refresh() {

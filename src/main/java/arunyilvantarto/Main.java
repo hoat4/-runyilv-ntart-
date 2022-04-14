@@ -1,7 +1,10 @@
 package arunyilvantarto;
 
 import arunyilvantarto.domain.*;
-import arunyilvantarto.operations.AdminOperation;
+import arunyilvantarto.events.AdminOperation;
+import arunyilvantarto.events.InventoryEvent;
+import arunyilvantarto.events.SellingEvent;
+import arunyilvantarto.ui.AdminPage;
 import arunyilvantarto.ui.LoginForm;
 import arunyilvantarto.ui.SellingTab;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,19 +60,11 @@ public class Main extends Application {
         rootListener = newRootListener;
     }
 
-    public Scene preload(Node node) {
+    public void preload(Node node) {
         StackPane sp = new StackPane(node);
-        Scene scene = new Scene(sp, this.scene.getWidth(), this.scene.getHeight());
-        scene.getStylesheets().add("/arunyilvantarto/app.css");
+        sp.getStylesheets().add("/arunyilvantarto/app.css");
         NodeHelper.processCSS(sp);
         sp.layout();
-        return scene;
-    }
-
-    public void switchPage(Scene newPage, OperationListener newRootListener) {
-        stage.setScene(newPage);
-        scene = newPage;
-        rootListener = newRootListener;
     }
 
     @Override
@@ -110,9 +105,14 @@ public class Main extends Application {
         this.scene = new Scene(root);
         scene.getStylesheets().add("/arunyilvantarto/app.css");
         primaryStage.setOnCloseRequest(evt -> {
-            if (rootListener instanceof SellingTab)
+            if (rootListener instanceof SellingTab) {
                 if (!((SellingTab) rootListener).close())
                     evt.consume();
+            } else if (rootListener instanceof AdminPage) {
+                if (!((AdminPage) rootListener).close())
+                    evt.consume();
+            }
+
         });
         primaryStage.setScene(scene);
         primaryStage.setWidth(1270);
@@ -167,22 +167,26 @@ public class Main extends Application {
         });
     }
 
-    public void executeOperation(AdminOperation op) {
+    public void onEvent(InventoryEvent event) {
         try {
-            System.out.println(JSON_MAPPER.writeValueAsString(op));
+            System.out.println(JSON_MAPPER.writeValueAsString(event));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        op.execute(dataRoot, this);
+        switch (event) {
+            case AdminOperation op -> op.execute(dataRoot, this);
+            case SellingEvent sellingEvent -> salesIO.writeEvent(sellingEvent);
+        }
 
         if (rootListener != null)
-            rootListener.onEvent(op);
+            rootListener.onEvent(event);
 
-        if (Platform.isFxApplicationThread())
-            executor.execute(this::writeDataToFile);
-        else
-            writeDataToFile();
+        if (event instanceof AdminOperation)
+            if (Platform.isFxApplicationThread())
+                executor.execute(this::writeDataToFile);
+            else
+                writeDataToFile();
     }
 
     private void writeDataToFile() {
@@ -199,5 +203,9 @@ public class Main extends Application {
                 alert.showAndWait();
             });
         }
+    }
+
+    public Object activePage() {
+        return rootListener;
     }
 }

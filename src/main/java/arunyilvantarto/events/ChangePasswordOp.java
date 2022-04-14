@@ -1,8 +1,10 @@
-package arunyilvantarto.operations;
+package arunyilvantarto.events;
 
 import arunyilvantarto.Main;
 import arunyilvantarto.domain.DataRoot;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
+@JsonTypeName("ChangePassword")
 public class ChangePasswordOp implements AdminOperation {
 
     public final String username;

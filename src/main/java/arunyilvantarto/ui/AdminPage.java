@@ -3,9 +3,9 @@ package arunyilvantarto.ui;
 import arunyilvantarto.Main;
 import arunyilvantarto.OperationListener;
 import arunyilvantarto.domain.Article;
+import arunyilvantarto.events.InventoryEvent;
 import arunyilvantarto.domain.User;
-import arunyilvantarto.operations.AdminOperation;
-import arunyilvantarto.operations.RenameUserOp;
+import arunyilvantarto.events.RenameUserOp;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -20,7 +20,7 @@ public class AdminPage implements OperationListener {
 
     private TabPane tabPane;
 
-    private Tab articlesTab, usersTab;
+    private Tab articlesTab, usersTab, sellingTab;
 
     private ArticlesTab articles;
     private AddItemTab addItem;
@@ -28,7 +28,9 @@ public class AdminPage implements OperationListener {
     private RevenueTab revenue;
     private MessagesTab messages;
     private MenusTab menus;
+    private SellingTab selling;
 
+    private Button beginSellingButton;
     private Label logonLabel;
 
     public AdminPage(Main main) {
@@ -78,9 +80,16 @@ public class AdminPage implements OperationListener {
         //messagesTab.setClosable(false);
         //tabPane.getTabs().add(messagesTab);
 
-        Button beginSellingButton = new Button("Kassza nyitása");
+        beginSellingButton = new Button("Kassza nyitása");
         beginSellingButton.setOnAction(evt -> {
-            SellingTab.begin(main, null, null);
+            selling = SellingTab.begin2(main);
+            if (selling != null) {
+                sellingTab = new Tab("Eladás", selling.build());
+                sellingTab.setClosable(false);
+                tabPane.getTabs().add(sellingTab);
+                tabPane.getSelectionModel().select(sellingTab);
+                beginSellingButton.setDisable(true);
+            }
         });
 
         Button logoutButton = new Button("Kijelentkezés");
@@ -101,12 +110,19 @@ public class AdminPage implements OperationListener {
                 add(tabPane, "grow");
     }
 
+    public void closeSellingTab() {
+        selling = null;
+        tabPane.getTabs().remove(sellingTab);
+        sellingTab = null;
+        beginSellingButton.setDisable(false);
+    }
+
     private void initLogonLabel() {
         logonLabel.setText("Bejelentkezve " + main.logonUser.name + "-ként");
     }
 
     @Override
-    public void onEvent(AdminOperation op) {
+    public void onEvent(InventoryEvent op) {
         if (op instanceof RenameUserOp)
             initLogonLabel();
 
@@ -125,5 +141,9 @@ public class AdminPage implements OperationListener {
     public void showUser(User user) {
         tabPane.getSelectionModel().select(usersTab);
         users.showUser(user);
+    }
+
+    public boolean close() {
+        return selling == null || selling.close();
     }
 }

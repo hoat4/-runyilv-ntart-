@@ -1,9 +1,11 @@
-package arunyilvantarto.operations;
+package arunyilvantarto.events;
 
 import arunyilvantarto.Main;
 import arunyilvantarto.domain.DataRoot;
 import arunyilvantarto.domain.User;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
+@JsonTypeName("AddUser")
 public class AddUserOp implements AdminOperation {
     public final User user;
 

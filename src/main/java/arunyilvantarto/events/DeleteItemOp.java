@@ -1,10 +1,12 @@
-package arunyilvantarto.operations;
+package arunyilvantarto.events;
 
 import arunyilvantarto.Main;
 import arunyilvantarto.domain.Article;
 import arunyilvantarto.domain.DataRoot;
 import arunyilvantarto.domain.Item;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
+@JsonTypeName("DeleteItem")
 public class DeleteItemOp implements AdminOperation {
 
     public final String articleName;

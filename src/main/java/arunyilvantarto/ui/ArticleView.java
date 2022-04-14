@@ -2,9 +2,10 @@ package arunyilvantarto.ui;
 
 import arunyilvantarto.SalesVisitor;
 import arunyilvantarto.domain.Article;
+import arunyilvantarto.events.InventoryEvent;
 import arunyilvantarto.domain.Item;
 import arunyilvantarto.domain.Sale;
-import arunyilvantarto.operations.*;
+import arunyilvantarto.events.*;
 import arunyilvantarto.ui.UIUtil.LocalDateStringConverter;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -20,7 +21,6 @@ import org.tbee.javafx.scene.layout.MigPane;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -85,7 +85,7 @@ public class ArticleView {
         return tabPane.getSelectionModel().getSelectedItem() == salesTab;
     }
 
-    public void onEvent(AdminOperation op) {
+    public void onEvent(InventoryEvent op) {
         if (op instanceof AddItemOp) {
             AddItemOp a = (AddItemOp) op;
             if (a.articleID.equals(article.name)) {
@@ -160,7 +160,7 @@ public class ArticleView {
             alert.getDialogPane().getButtonTypes().setAll(deleteButtonType, cancelButtonType);
 
             if (alert.showAndWait().orElse(null) == deleteButtonType) {
-                articlesTab.main.executeOperation(new DeleteItemOp(article.name, item));
+                articlesTab.main.onEvent(new DeleteItemOp(article.name, item));
             }
         });
         deleteMenuItem.disableProperty().bind(createBooleanBinding(() ->
@@ -183,7 +183,7 @@ public class ArticleView {
                     () -> !d.getEditor().getText().matches("-?[0-9]+"), d.getEditor().textProperty()
             ));
             d.showAndWait().ifPresent(s -> {
-                articlesTab.main.executeOperation(new ChangeArticleOp(article.name,
+                articlesTab.main.onEvent(new ChangeArticleOp(article.name,
                         ChangeArticleOp.ArticleProperty.PRICE, article.sellingPrice, Integer.parseInt(s)));
             });
         });
@@ -198,7 +198,7 @@ public class ArticleView {
             ));
             UIUtil.barcodeField(d.getEditor(), null);
             d.showAndWait().ifPresent(s -> {
-                articlesTab.main.executeOperation(new ChangeArticleOp(article.name,
+                articlesTab.main.onEvent(new ChangeArticleOp(article.name,
                         ChangeArticleOp.ArticleProperty.BARCODE, article.barCode, s.isEmpty() ? null : s));
             });
         });
@@ -210,7 +210,7 @@ public class ArticleView {
                     () -> !d.getEditor().getText().matches("[0-9]+"), d.getEditor().textProperty()
             ));
             d.showAndWait().ifPresent(s -> {
-                articlesTab.main.executeOperation(new ChangeArticleOp(article.name,
+                articlesTab.main.onEvent(new ChangeArticleOp(article.name,
                         ChangeArticleOp.ArticleProperty.QUANTITY, article.stockQuantity, Integer.parseInt(s)));
             });
         });
@@ -330,7 +330,7 @@ public class ArticleView {
             AddItemOp op = new AddItemOp();
             op.articleID = article.name;
             op.product = p;
-            articlesTab.main.executeOperation(op);
+            articlesTab.main.onEvent(op);
         });
     }
 

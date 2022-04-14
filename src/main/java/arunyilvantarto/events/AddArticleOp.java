@@ -1,9 +1,11 @@
-package arunyilvantarto.operations;
+package arunyilvantarto.events;
 
 import arunyilvantarto.Main;
 import arunyilvantarto.domain.Article;
 import arunyilvantarto.domain.DataRoot;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
+@JsonTypeName("AddArticle")
 public class AddArticleOp implements AdminOperation {
 
     public  final Article article;

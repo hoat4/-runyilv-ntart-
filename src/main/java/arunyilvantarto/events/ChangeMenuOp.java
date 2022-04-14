@@ -1,11 +1,13 @@
-package arunyilvantarto.operations;
+package arunyilvantarto.events;
 
 import arunyilvantarto.Main;
 import arunyilvantarto.domain.DataRoot;
 import arunyilvantarto.domain.Menu;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
+@JsonTypeName("ChangeMenu")
 public class ChangeMenuOp implements AdminOperation{
 
     @JsonProperty

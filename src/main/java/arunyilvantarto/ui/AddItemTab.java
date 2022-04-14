@@ -1,10 +1,9 @@
 package arunyilvantarto.ui;
 
 import arunyilvantarto.Main;
-import arunyilvantarto.domain.Article;
+import arunyilvantarto.events.InventoryEvent;
 import arunyilvantarto.domain.Item;
-import arunyilvantarto.operations.AddItemOp;
-import arunyilvantarto.operations.AdminOperation;
+import arunyilvantarto.events.AddItemOp;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -35,7 +34,7 @@ public class AddItemTab {
                 add(lastProductsTable(), "grow");
     }
 
-    public void onEvent(AdminOperation op) {
+    public void onEvent(InventoryEvent op) {
         if (op instanceof AddItemOp)
             productsTable.getItems().add(0, ((AddItemOp) op).product);
     }
@@ -78,7 +77,7 @@ public class AddItemTab {
             AddItemOp addProductOp = new AddItemOp();
             addProductOp.articleID = item.article.name;
             addProductOp.product = item;
-            app.executeOperation(addProductOp);
+            app.onEvent(addProductOp);
 
             articleField.setText("");
             quantityField.setText("");

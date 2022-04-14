@@ -2,8 +2,9 @@ package arunyilvantarto.ui;
 
 import arunyilvantarto.Main;
 import arunyilvantarto.domain.DataRoot;
+import arunyilvantarto.events.InventoryEvent;
 import arunyilvantarto.domain.User;
-import arunyilvantarto.operations.*;
+import arunyilvantarto.events.*;
 import javafx.collections.FXCollections;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -11,9 +12,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextInputDialog;
 import org.tbee.javafx.scene.layout.MigPane;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static arunyilvantarto.ui.UIUtil.TableBuilder.UNLIMITED_WIDTH;
 import static java.util.Comparator.comparing;
@@ -41,7 +39,7 @@ public class UsersTab {
                 add(usersTable(), "grow");
     }
 
-    public void onEvent(AdminOperation op) {
+    public void onEvent(InventoryEvent op) {
         if (op instanceof AddUserOp || op instanceof ChangeRoleOp || op instanceof RenameUserOp || op instanceof SetUserDeletedOp) {
             usersTable.getItems().setAll(app.dataRoot.users);
             usersTable.refresh();
@@ -66,7 +64,7 @@ public class UsersTab {
                 user.name = s;
                 user.passwordHash = null;
                 user.role = User.Role.STAFF;
-                app.executeOperation(new AddUserOp(user));
+                app.onEvent(new AddUserOp(user));
             });
         });
         return button;
